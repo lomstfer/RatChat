@@ -1,0 +1,14 @@
+namespace GS;
+
+table GameState {
+    players:[Player];
+}
+
+table Player {
+    id:int;
+    x:int;
+    y:int;
+    message:string;
+}
+
+root_type GameState;
