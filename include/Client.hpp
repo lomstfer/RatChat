@@ -21,8 +21,9 @@ struct Client
         host = enet_host_connect(client, &address, 1, 0);
         if (host == NULL)
             Log("error: connecting to host");
-        font = rl::LoadFont("assets/UbuntuCondensed-Regular.ttf");
         fb_builder = flatbuffers::FlatBufferBuilder(1024);
+        font = rl::LoadFont("assets/UbuntuCondensed-Regular.ttf");
+        
     }
 
     ENetHost* client;
@@ -31,6 +32,8 @@ struct Client
     ENetPeer* host;
 
     flatbuffers::FlatBufferBuilder fb_builder;
+
+    rl::Font font;
 
     int send_fps = 10;
     float send_time = 0;
@@ -61,7 +64,7 @@ struct Client
     std::string typeMessage = "";
     bool typingMessage = false;
 
-    rl::Font font;
+    
 
     float dt;
     void update()
