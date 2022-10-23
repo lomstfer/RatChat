@@ -23,7 +23,7 @@ struct Client
             Log("error: connecting to host");
         fb_builder = flatbuffers::FlatBufferBuilder(1024);
         font = rl::LoadFont("assets/UbuntuCondensed-Regular.ttf");
-        bgTexture = rl::LoadTexture("assets/ce.png");
+        bgTexture = rl::LoadTexture("assets/sky.png");
     }
 
     ENetHost* client;
@@ -35,13 +35,13 @@ struct Client
 
     rl::Font font;
     rl::Texture2D bgTexture;
-    int bgScale = 10;
+    int bgScale = 2;
 
     int send_fps = 10;
     float send_time = 0;
     bool send_now = false;
 
-    rl::Color colorBg = {61, 99, 63, 255};
+    rl::Color colorBg = {20, 20, 20, 255};
 
     // players vector with server positions
     std::vector<Player> players_server;
