@@ -23,7 +23,7 @@ struct Client
             Log("error: connecting to host");
         fb_builder = flatbuffers::FlatBufferBuilder(1024);
         font = rl::LoadFont("assets/UbuntuCondensed-Regular.ttf");
-        
+        bgTexture = rl::LoadTexture("assets/ce.png");
     }
 
     ENetHost* client;
@@ -34,6 +34,8 @@ struct Client
     flatbuffers::FlatBufferBuilder fb_builder;
 
     rl::Font font;
+    rl::Texture2D bgTexture;
+    int bgScale = 10;
 
     int send_fps = 10;
     float send_time = 0;
@@ -75,7 +77,7 @@ struct Client
             {
                 case ENET_EVENT_TYPE_CONNECT:
                     _id = event.peer->outgoingPeerID;
-                    //send_now = true;
+                    send_now = true;
                     break;
                 case ENET_EVENT_TYPE_RECEIVE:
                     // get world info (all players data)
@@ -95,7 +97,6 @@ struct Client
                             players_show[i].x = temp_players[i].x;
                             players_show[i].y = temp_players[i].y;
                         }
-                        
                     }
                     enet_packet_destroy(event.packet);
                     break;
@@ -151,16 +152,18 @@ struct Client
         }
         
 
-        /* float d_cam_x = _x - _camera_x - WINW/2.f + _w/2.f;
+        float d_cam_x = _x - _camera_x - WINW/2.f + _w/2.f;
         float d_cam_y = _y - _camera_y - WINH/2.f + _h/2.f;
         _camera_x += d_cam_x*5.f * dt;
-        _camera_y += d_cam_y*5.f * dt; */
+        _camera_y += d_cam_y*5.f * dt;
     }
 
     void interpolatePlayers()
     {
         for (int i = 0; i < players_show.size(); i++)
         {
+            if (players_show[i].id == players_server[i].id)
+            {
             if (players_show[i].x < players_server[i].x)
             {
                 players_show[i].x += _speed * dt;
@@ -184,6 +187,7 @@ struct Client
                 players_show[i].y -= _speed * dt;
                 if (players_show[i].y < players_server[i].y)
                     players_show[i].y = players_server[i].y;
+            }
             }
         }
     }
@@ -222,10 +226,10 @@ struct Client
     {
         rl::BeginDrawing();
             rl::ClearBackground(colorBg);
+            rl::DrawTextureEx(bgTexture, {-bgTexture.width/2.f*bgScale - _camera_x, -bgTexture.height/2.f*bgScale - _camera_y}, 0, bgScale, {255,255,255,255});
 
             for (int i = 0; i < players_show.size(); i++)
             {
-                
                 rl::Vector2 msgTextSize = rl::MeasureTextEx(font, players_show[i].message.c_str(), 20, 0);
                 if (players_show[i].id == _id)
                 {
@@ -239,7 +243,7 @@ struct Client
                 rl::DrawTextPro(font, players_show[i].message.c_str(), {pDrawPos.x+_w/2 - msgTextSize.x/2, pDrawPos.y - 40}, {0,0}, 0, 20, 0, {255,255,255,255});
             }
 
-            std::string coordsText = std::to_string(ftint(_x)) + "; " + std::to_string(ftint(_y));
+            std::string coordsText = std::to_string(ftint(_x/10.f)) + "; " + std::to_string(ftint(-_y/10.f));
             rl::DrawTextPro(font, coordsText.c_str(), {0,0}, {0,0}, 0, 20, 0, {255,255,255,255});
 
             if (typingMessage)
