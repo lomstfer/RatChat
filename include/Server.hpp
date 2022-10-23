@@ -9,6 +9,7 @@ struct Server
 {
     Server()
     {
+        Log("server");
         if (enet_initialize() != 0)
             Log("error: init enet");
         atexit(enet_deinitialize);

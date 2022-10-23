@@ -64,8 +64,6 @@ struct Client
     std::string typeMessage = "";
     bool typingMessage = false;
 
-    
-
     float dt;
     void update()
     {
@@ -77,7 +75,7 @@ struct Client
             {
                 case ENET_EVENT_TYPE_CONNECT:
                     _id = event.peer->outgoingPeerID;
-                    send_now = true;
+                    //send_now = true;
                     break;
                 case ENET_EVENT_TYPE_RECEIVE:
                     // get world info (all players data)
