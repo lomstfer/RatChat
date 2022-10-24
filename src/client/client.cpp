@@ -4,7 +4,7 @@ int main()
 {
     rl::InitWindow(WINW, WINH, "");
     rl::SetTargetFPS(144);
-    Client client("192.168.194.79");
+    Client client("192.168.56.1");
 
     bool running = true;
     while (running)
