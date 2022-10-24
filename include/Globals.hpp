@@ -6,8 +6,8 @@
 
 #define Log(x) std::cout << x << std::endl
 #define Lognl(x) std::cout << std::endl << x << std::endl
-#define WINW 360
-#define WINH 360
+#define WINW 1280
+#define WINH 720
 #define SPRITE_SCALE 4
 
 struct Player

@@ -23,7 +23,8 @@ struct Client
             Log("error: connecting to host");
         fb_builder = flatbuffers::FlatBufferBuilder(1024);
         font = rl::LoadFont("assets/UbuntuCondensed-Regular.ttf");
-        bgTexture = rl::LoadTexture("assets/sky.png");
+        bgTexture = rl::LoadTexture("assets/bild.png");
+        bg_list = {rl::Vector2{(float)0*bgScale,(float)0*bgScale}, rl::Vector2{(float)bgTexture.width*bgScale, (float)0*bgScale}};
     }
 
     ENetHost* client;
@@ -35,13 +36,14 @@ struct Client
 
     rl::Font font;
     rl::Texture2D bgTexture;
-    int bgScale = 2;
+    int bgScale = 1;
 
     int send_fps = 10;
     float send_time = 0;
     bool send_now = false;
 
     rl::Color colorBg = {20, 20, 20, 255};
+    std::vector<rl::Vector2> bg_list;
 
     // players vector with server positions
     std::vector<Player> players_server;
@@ -110,7 +112,39 @@ struct Client
         // interpolate other players positions to their new positions that come from server and are server-known
         interpolatePlayers();
 
+        //fixBackground();
+
         render();
+    }
+
+    void getMessageSend()
+    {
+        if (rl::IsKeyPressed(rl::KEY_ENTER) && typingMessage)
+        {
+            message = typeMessage;
+            fb_builder.Clear();
+            fb_builder.Finish(GS::CreatePlayer(fb_builder, _id, _x, _y, fb_builder.CreateString(message)));
+            enet_peer_send(host, 0, enet_packet_create(fb_builder.GetBufferPointer(), fb_builder.GetSize()+1, 0));
+            typeMessage.clear();
+        }
+        if (rl::IsKeyPressed(rl::KEY_ENTER))
+            typingMessage = !typingMessage;
+        if (typingMessage)
+        {
+            // Get char pressed (unicode character) on the queue
+            int key = rl::GetCharPressed();
+
+            // Check if more characters have been pressed on the same frame
+            while (key > 0)
+            {
+                typeMessage += char(key);
+                key = rl::GetCharPressed();  // Check next character in the queue
+            }
+
+            if (rl::IsKeyPressed(rl::KEY_BACKSPACE) && typeMessage.length() > 0)
+                typeMessage.pop_back();
+        }
+        
     }
 
     void inputSend()
@@ -192,41 +226,19 @@ struct Client
         }
     }
 
-    void getMessageSend()
+    /* void fixBackground()
     {
-        if (rl::IsKeyPressed(rl::KEY_ENTER) && typingMessage)
-        {
-            message = typeMessage;
-            fb_builder.Clear();
-            fb_builder.Finish(GS::CreatePlayer(fb_builder, _id, _x, _y, fb_builder.CreateString(message)));
-            enet_peer_send(host, 0, enet_packet_create(fb_builder.GetBufferPointer(), fb_builder.GetSize()+1, 0));
-            typeMessage.clear();
-        }
-        if (rl::IsKeyPressed(rl::KEY_ENTER))
-            typingMessage = !typingMessage;
-        if (typingMessage)
-        {
-            // Get char pressed (unicode character) on the queue
-            int key = rl::GetCharPressed();
-
-            // Check if more characters have been pressed on the same frame
-            while (key > 0)
-            {
-                typeMessage += char(key);
-                key = rl::GetCharPressed();  // Check next character in the queue
-            }
-
-            if (rl::IsKeyPressed(rl::KEY_BACKSPACE) && typeMessage.length() > 0)
-                typeMessage.pop_back();
-        }
-        
-    }
+        bg_list.push_back({0,0});
+    } */
 
     void render()
     {
         rl::BeginDrawing();
             rl::ClearBackground(colorBg);
-            rl::DrawTextureEx(bgTexture, {-bgTexture.width/2.f*bgScale - _camera_x, -bgTexture.height/2.f*bgScale - _camera_y}, 0, bgScale, {255,255,255,255});
+            for (int i = 0; i < bg_list.size(); i++)
+            {
+                rl::DrawTextureEx(bgTexture, {-bg_list[i].x - _camera_x, bg_list[i].y - _camera_y}, 0, bgScale, {255,255,255,255});
+            }
 
             for (int i = 0; i < players_show.size(); i++)
             {
