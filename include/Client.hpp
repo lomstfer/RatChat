@@ -23,8 +23,7 @@ struct Client
             Log("error: connecting to host");
         fb_builder = flatbuffers::FlatBufferBuilder(1024);
         font = rl::LoadFont("assets/UbuntuCondensed-Regular.ttf");
-        bgTexture = rl::LoadTexture("assets/bild.png");
-        bg_list = {rl::Vector2{(float)0*bgScale,(float)0*bgScale}, rl::Vector2{(float)bgTexture.width*bgScale, (float)0*bgScale}};
+        bgTexture = rl::LoadTexture("assets/desert_seemsls.png");
     }
 
     ENetHost* client;
@@ -36,7 +35,7 @@ struct Client
 
     rl::Font font;
     rl::Texture2D bgTexture;
-    int bgScale = 1;
+    int bgScale = 5;
 
     int send_fps = 10;
     float send_time = 0;
@@ -112,7 +111,7 @@ struct Client
         // interpolate other players positions to their new positions that come from server and are server-known
         interpolatePlayers();
 
-        //fixBackground();
+        fixBackground();
 
         render();
     }
@@ -226,10 +225,10 @@ struct Client
         }
     }
 
-    /* void fixBackground()
+    void fixBackground()
     {
-        bg_list.push_back({0,0});
-    } */
+        bg_list.push_back({_x+(int(_x)%(bgTexture.width*bgScale)), _y+(int(_y)%(bgTexture.height*bgScale))});
+    }
 
     void render()
     {
@@ -237,7 +236,7 @@ struct Client
             rl::ClearBackground(colorBg);
             for (int i = 0; i < bg_list.size(); i++)
             {
-                rl::DrawTextureEx(bgTexture, {-bg_list[i].x - _camera_x, bg_list[i].y - _camera_y}, 0, bgScale, {255,255,255,255});
+                rl::DrawTextureEx(bgTexture, {bg_list[i].x - _camera_x, bg_list[i].y - _camera_y}, 0, bgScale, {255,255,255,255});
             }
 
             for (int i = 0; i < players_show.size(); i++)
