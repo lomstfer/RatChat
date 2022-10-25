@@ -5,6 +5,7 @@
 #include <enet/enet.h>
 #include <string>
 #include <vector>
+#include <math.h>
 
 struct Client
 {
@@ -24,6 +25,15 @@ struct Client
         fb_builder = flatbuffers::FlatBufferBuilder(1024);
         font = rl::LoadFont("assets/UbuntuCondensed-Regular.ttf");
         bgTexture = rl::LoadTexture("assets/desert_seemsls.png");
+        bgSize = {(float)bgTexture.width*bgScale, (float)bgTexture.height*bgScale};
+        
+        for (int x = -2; x < 2; x++)
+        {
+            for (int y = -2; y < 2; y++)
+            {
+                bg_list.push_back({x*bgSize.x, y*bgSize.y});
+            }
+        }
     }
 
     ENetHost* client;
@@ -35,7 +45,8 @@ struct Client
 
     rl::Font font;
     rl::Texture2D bgTexture;
-    int bgScale = 5;
+    float bgScale = 5;
+    rl::Vector2 bgSize;
 
     int send_fps = 10;
     float send_time = 0;
@@ -110,8 +121,6 @@ struct Client
 
         // interpolate other players positions to their new positions that come from server and are server-known
         interpolatePlayers();
-
-        fixBackground();
 
         render();
     }
@@ -225,19 +234,30 @@ struct Client
         }
     }
 
-    void fixBackground()
+    void fixDrawBackground()
     {
-        bg_list.push_back({_x+(int(_x)%(bgTexture.width*bgScale)), _y+(int(_y)%(bgTexture.height*bgScale))});
+        
+        for (int i = 0; i < bg_list.size(); i++)
+        {
+            float rowcol = sqrt(bg_list.size());
+            if (_x - bg_list[i].x < -bgSize.x)
+                bg_list[i].x -= rowcol*bgSize.x;
+            if (_x - bg_list[i].x > bgSize.x*(rowcol/2) + bgSize.x/2)
+                bg_list[i].x += rowcol*bgSize.x;
+            if (_y - bg_list[i].y < -bgSize.y)
+                bg_list[i].y -= rowcol*bgSize.y;
+            if (_y - bg_list[i].y > bgSize.y*(rowcol/2) + bgSize.y/2)
+                bg_list[i].y += rowcol*bgSize.y;
+            
+            rl::DrawTextureEx(bgTexture, {bg_list[i].x - _camera_x, bg_list[i].y - _camera_y}, 0, bgScale, {255,255,255,255});
+        }
     }
 
     void render()
     {
         rl::BeginDrawing();
             rl::ClearBackground(colorBg);
-            for (int i = 0; i < bg_list.size(); i++)
-            {
-                rl::DrawTextureEx(bgTexture, {bg_list[i].x - _camera_x, bg_list[i].y - _camera_y}, 0, bgScale, {255,255,255,255});
-            }
+            fixDrawBackground();
 
             for (int i = 0; i < players_show.size(); i++)
             {
@@ -245,13 +265,13 @@ struct Client
                 if (players_show[i].id == _id)
                 {
                     rl::Vector2 pDrawPos = {_x - _camera_x, _y - _camera_y};
-                    rl::DrawRectangle(pDrawPos.x, pDrawPos.y, _w, _h, {255, 255, 255, 255});
-                    rl::DrawTextPro(font, players_show[i].message.c_str(), {pDrawPos.x + _w/2 - msgTextSize.x/2, pDrawPos.y - 40}, {0,0}, 0, 20, 0, {255,255,255,255});
+                    rl::DrawRectangle(pDrawPos.x - _w/2.f, pDrawPos.y - _h/2.f, _w, _h, {255, 255, 255, 255});
+                    rl::DrawTextPro(font, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 40}, {0,0}, 0, 20, 0, {255,255,255,255});
                     continue;
                 }
                 rl::Vector2 pDrawPos = {players_show[i].x - _camera_x, players_show[i].y - _camera_y};
-                rl::DrawRectangle(pDrawPos.x, pDrawPos.y, _w, _h, {255,255,255,255});
-                rl::DrawTextPro(font, players_show[i].message.c_str(), {pDrawPos.x+_w/2 - msgTextSize.x/2, pDrawPos.y - 40}, {0,0}, 0, 20, 0, {255,255,255,255});
+                rl::DrawRectangle(pDrawPos.x - _w/2.f, pDrawPos.y - _h/2.f, _w, _h, {255,255,255,255});
+                rl::DrawTextPro(font, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 40}, {0,0}, 0, 20, 0, {255,255,255,255});
             }
 
             std::string coordsText = std::to_string(ftint(_x/10.f)) + "; " + std::to_string(ftint(-_y/10.f));
