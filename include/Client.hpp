@@ -24,9 +24,8 @@ struct Client
             Log("error: connecting to host");
         fb_builder = flatbuffers::FlatBufferBuilder(1024);
         font = rl::LoadFont("assets/UbuntuCondensed-Regular.ttf");
-        bgTexture = rl::LoadTexture("assets/desert.png");
+        bgTexture = rl::LoadTexture("assets/carpet.png");
         bgSize = {(float)bgTexture.width*bgScale, (float)bgTexture.height*bgScale};
-        
         for (int x = -2; x < 2; x++)
         {
             for (int y = -2; y < 2; y++)
@@ -34,6 +33,9 @@ struct Client
                 bg_list.push_back({x*bgSize.x, y*bgSize.y});
             }
         }
+        ratTexture = rl::LoadTexture("assets/rat.png");
+        _w = ratTexture.width * _scale;
+        _h = ratTexture.height * _scale;
     }
 
     ENetHost* client;
@@ -45,7 +47,7 @@ struct Client
 
     rl::Font font;
     rl::Texture2D bgTexture;
-    float bgScale = 5;
+    float bgScale = 1;
     rl::Vector2 bgSize;
 
     int send_fps = 10;
@@ -61,10 +63,12 @@ struct Client
     std::vector<Player> players_show;
     std::vector<Player> temp_players;
 
+    rl::Texture2D ratTexture;
     float _x = 0;
     float _y = 0;
-    int _w = 20;
-    int _h = 20;
+    int _w;
+    int _h;
+    int _scale = 5;
     bool _pressed = false;
     float _pressed_time = 0;
     int _speed = 200;
@@ -264,12 +268,14 @@ struct Client
                 if (players_show[i].id == _id)
                 {
                     rl::Vector2 pDrawPos = {_x - _camera_x, _y - _camera_y};
-                    rl::DrawRectangle(pDrawPos.x - _w/2.f, pDrawPos.y - _h/2.f, _w, _h, {255, 255, 255, 255});
+                    //rl::DrawRectangle(pDrawPos.x - _w/2.f, pDrawPos.y - _h/2.f, _w, _h, {255, 255, 255, 255});
+                    rl::DrawTextureEx(ratTexture, {pDrawPos.x, pDrawPos.y}, 0, _scale, {255,255,255,255});
                     rl::DrawTextPro(font, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 40}, {0,0}, 0, 20, 0, {255,255,255,255});
                     continue;
                 }
                 rl::Vector2 pDrawPos = {players_show[i].x - _camera_x, players_show[i].y - _camera_y};
-                rl::DrawRectangle(pDrawPos.x - _w/2.f, pDrawPos.y - _h/2.f, _w, _h, {255,255,255,255});
+                //rl::DrawRectangle(pDrawPos.x - _w/2.f, pDrawPos.y - _h/2.f, _w, _h, {255,255,255,255});
+                rl::DrawTextureEx(ratTexture, {pDrawPos.x - _w/2.f, pDrawPos.y - _h/2.f}, 0, _scale, {255,255,255,255});
                 rl::DrawTextPro(font, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 40}, {0,0}, 0, 20, 0, {255,255,255,255});
             }
 
