@@ -36,6 +36,8 @@ struct Client
         ratTexture = rl::LoadTexture("assets/rat.png");
         _w = ratTexture.width * _scale;
         _h = ratTexture.height * _scale;
+        _camera_x = -WINW/2.f + _w/2.f;
+        _camera_y = -WINH/2.f + _h/2.f;
     }
 
     ENetHost* client;
@@ -73,8 +75,8 @@ struct Client
     float _pressed_time = 0;
     int _speed = 200;
 
-    float _camera_x = -WINW/2.f + _w/2.f;
-    float _camera_y = -WINH/2.f + _h/2.f;
+    float _camera_x;
+    float _camera_y;
 
     int _id;
 
@@ -269,7 +271,7 @@ struct Client
                 {
                     rl::Vector2 pDrawPos = {_x - _camera_x, _y - _camera_y};
                     //rl::DrawRectangle(pDrawPos.x - _w/2.f, pDrawPos.y - _h/2.f, _w, _h, {255, 255, 255, 255});
-                    rl::DrawTextureEx(ratTexture, {pDrawPos.x, pDrawPos.y}, 0, _scale, {255,255,255,255});
+                    rl::DrawTextureEx(ratTexture, {pDrawPos.x - _w/2.f, pDrawPos.y - _h/2.f}, 0, _scale, {255,255,255,255});
                     rl::DrawTextPro(font, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 40}, {0,0}, 0, 20, 0, {255,255,255,255});
                     continue;
                 }
