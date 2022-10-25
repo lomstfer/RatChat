@@ -24,7 +24,7 @@ struct Client
             Log("error: connecting to host");
         fb_builder = flatbuffers::FlatBufferBuilder(1024);
         font = rl::LoadFont("assets/UbuntuCondensed-Regular.ttf");
-        bgTexture = rl::LoadTexture("assets/desert_seemsls.png");
+        bgTexture = rl::LoadTexture("assets/desert.png");
         bgSize = {(float)bgTexture.width*bgScale, (float)bgTexture.height*bgScale};
         
         for (int x = -2; x < 2; x++)
@@ -67,7 +67,7 @@ struct Client
     int _h = 20;
     bool _pressed = false;
     float _pressed_time = 0;
-    int _speed = 100;
+    int _speed = 200;
 
     float _camera_x = -WINW/2.f + _w/2.f;
     float _camera_y = -WINH/2.f + _h/2.f;
@@ -236,7 +236,6 @@ struct Client
 
     void fixDrawBackground()
     {
-        
         for (int i = 0; i < bg_list.size(); i++)
         {
             float rowcol = sqrt(bg_list.size());
@@ -280,10 +279,10 @@ struct Client
             if (typingMessage)
             {
                 rl::Vector2 msgTextSize = rl::MeasureTextEx(font, typeMessage.c_str(), 50, 0);
-                rl::DrawRectangle(WINW/2.f - msgTextSize.x/2, 50, clamp(msgTextSize.x, 10, WINW), msgTextSize.y, {150,150,150,100});
                 rl::DrawTextPro(font, typeMessage.c_str(), {WINW/2.f - msgTextSize.x/2, 50}, {0,0}, 0, 50, 0, {255,255,255,255});
+                rl::DrawRectangle(WINW/2.f + msgTextSize.x/2, 50 + msgTextSize.y - 5, 25, (int)rl::GetTime()%2 * 5.f, {255,255,255,200});
             }
-              
+            
         rl::EndDrawing();
     }
 };
