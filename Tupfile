@@ -4,8 +4,8 @@ CLIENT_FLAGS = -mwindows
 SERVER_LIBS = -L lib -lenet -lwinmm -lws2_32
 SERVER_FLAGS =
 
-: foreach src/client/*.cpp |> g++ -c %f -o %o $(INCLUDE) $(CLIENT_LIBS) $(CLIENT_FLAGS) |> obj/%B.o
-: obj/client.o |> g++ %f -o %o $(CLIENT_LIBS) $(CLIENT_FLAGS) |> %B.exe
+: foreach src/client/*.cpp |> g++ -c %f -o %o $(INCLUDE) $(CLIENT_LIBS) $(CLIENT_FLAGS) |> obj/client/%B.o
+: obj/client/*.o |> g++ %f -o %o $(CLIENT_LIBS) $(CLIENT_FLAGS) |> client.exe
 
-: foreach src/server/*.cpp |> g++ -c %f -o %o $(INCLUDE) $(SERVER_LIBS) $(SERVER_FLAGS) |> obj/%B.o
-: obj/server.o |> g++ %f -o %o $(SERVER_LIBS) $(SERVER_FLAGS) |> %B.exe
+: foreach src/server/*.cpp |> g++ -c %f -o %o $(INCLUDE) $(SERVER_LIBS) $(SERVER_FLAGS) |> obj/server/%B.o
+: obj/server/server.o |> g++ %f -o %o $(SERVER_LIBS) $(SERVER_FLAGS) |> %B.exe

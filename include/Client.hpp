@@ -1,6 +1,7 @@
 #include "game_state_generated.h"
 #include "Globals.hpp"
-#include "raylib.h"
+#include "SpriteSheet.hpp"
+#include <raylib.h>
 #include <iostream>
 #include <enet/enet.h>
 #include <string>
@@ -24,7 +25,7 @@ struct Client
             Log("error: connecting to host");
         fb_builder = flatbuffers::FlatBufferBuilder(1024);
         font = rl::LoadFont("assets/UbuntuCondensed-Regular.ttf");
-        bgTexture = rl::LoadTexture("assets/carpet.png");
+        bgTexture = TEX_DESERT;
         bgSize = {(float)bgTexture.width*bgScale, (float)bgTexture.height*bgScale};
         for (int x = -2; x < 2; x++)
         {
@@ -33,9 +34,9 @@ struct Client
                 bg_list.push_back({x*bgSize.x, y*bgSize.y});
             }
         }
-        ratTexture = rl::LoadTexture("assets/rat.png");
-        _w = ratTexture.width * _scale;
-        _h = ratTexture.height * _scale;
+        ratSheet = SpriteSheet(TEX_SS_RAT, 8, 8, 12);
+        _w = ratSheet.frameWidth * ratSheet.scale;
+        _h = ratSheet.frameHeight * ratSheet.scale;
         _camera_x = -WINW/2.f + _w/2.f;
         _camera_y = -WINH/2.f + _h/2.f;
     }
@@ -49,7 +50,7 @@ struct Client
 
     rl::Font font;
     rl::Texture2D bgTexture;
-    float bgScale = 1;
+    float bgScale = 5;
     rl::Vector2 bgSize;
 
     int send_fps = 10;
@@ -65,7 +66,7 @@ struct Client
     std::vector<Player> players_show;
     std::vector<Player> temp_players;
 
-    rl::Texture2D ratTexture;
+    SpriteSheet ratSheet;
     float _x = 0;
     float _y = 0;
     int _w;
@@ -271,13 +272,14 @@ struct Client
                 {
                     rl::Vector2 pDrawPos = {_x - _camera_x, _y - _camera_y};
                     //rl::DrawRectangle(pDrawPos.x - _w/2.f, pDrawPos.y - _h/2.f, _w, _h, {255, 255, 255, 255});
-                    rl::DrawTextureEx(ratTexture, {pDrawPos.x - _w/2.f, pDrawPos.y - _h/2.f}, 0, _scale, {255,255,255,255});
+                    //rl::DrawTextureEx(ratTexture, {pDrawPos.x - _w/2.f, pDrawPos.y - _h/2.f}, 0, _scale, {255,255,255,255});
+                    ratSheet.draw({pDrawPos.x, pDrawPos.x}, 0);
                     rl::DrawTextPro(font, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 40}, {0,0}, 0, 20, 0, {255,255,255,255});
                     continue;
                 }
                 rl::Vector2 pDrawPos = {players_show[i].x - _camera_x, players_show[i].y - _camera_y};
                 //rl::DrawRectangle(pDrawPos.x - _w/2.f, pDrawPos.y - _h/2.f, _w, _h, {255,255,255,255});
-                rl::DrawTextureEx(ratTexture, {pDrawPos.x - _w/2.f, pDrawPos.y - _h/2.f}, 0, _scale, {255,255,255,255});
+                ratSheet.draw({pDrawPos.x, pDrawPos.x}, 0);
                 rl::DrawTextPro(font, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 40}, {0,0}, 0, 20, 0, {255,255,255,255});
             }
 
