@@ -99,6 +99,9 @@ struct Server
             {
                 players_server[i].x = pData->x();
                 players_server[i].y = pData->y();
+                players_server[i].rat_type = pData->rat_type();
+                players_server[i].frame = pData->frame();
+                players_server[i].rotation = pData->rotation();
                 if (flatbuffers::GetString(pData->message()).length() > 0)
                 {
                     players_server[i].message = flatbuffers::GetString(pData->message());
@@ -114,7 +117,7 @@ struct Server
         players_vector.clear();
         for (int i = 0; i < players_server.size(); i++)
         {
-            players_vector.push_back(GS::CreatePlayer(fb_builder, players_server[i].id, players_server[i].x, players_server[i].y, fb_builder.CreateString(players_server[i].message)));
+            players_vector.push_back(GS::CreatePlayer(fb_builder, players_server[i].id, players_server[i].x, players_server[i].y, players_server[i].rat_type, players_server[i].frame, players_server[i].rotation, fb_builder.CreateString(players_server[i].message)));
         }
         auto game_state = GS::CreateGameState(fb_builder, fb_builder.CreateVector(players_vector));
         fb_builder.Finish(game_state);

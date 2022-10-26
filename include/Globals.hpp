@@ -6,8 +6,8 @@
 
 #define Log(x) std::cout << x << std::endl
 #define Lognl(x) std::cout << std::endl << x << std::endl
-#define WINW 1280
-#define WINH 720
+#define WINW 1920
+#define WINH 1080
 #define SPRITE_SCALE 4
 
 struct Player
@@ -18,15 +18,36 @@ struct Player
     int id;
     float x;
     float y;
+    int rat_type;
+    int frame;
+    int rotation;
     std::string message;
 };
 
-unsigned char randChar(int lower, int higher);
-int ftint(float x);
-int clamp(int num, int lower, int higher);
+unsigned char randChar(int lower, int higher)
+{
+    return (unsigned char)(rand()%(higher - lower + 1) + lower);
+}
 
-extern rl::Texture2D TEX_DESERT;
-extern rl::Texture2D TEX_SS_RAT;
-void loadTextures();
+int ftint(float x)
+{
+    if (x > 0)
+        return int(x + 0.5f);
+    return int(x - 0.5f);
+}
+
+int clamp(int num, int lower, int higher)
+{
+    if (num < lower)
+        return lower;
+    if (num > higher)
+        return higher;
+    return num;
+}
+
+float lerp(float v0, float v1, float t) 
+{
+    return v0 + t * (v1 - v0);
+}
 
 #endif

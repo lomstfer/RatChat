@@ -8,6 +8,9 @@ table Player {
     id:int;
     x:int;
     y:int;
+    rat_type:int;
+    frame:int;
+    rotation:int;
     message:string;
 }
 

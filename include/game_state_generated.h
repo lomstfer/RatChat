@@ -79,7 +79,10 @@ struct Player FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_ID = 4,
     VT_X = 6,
     VT_Y = 8,
-    VT_MESSAGE = 10
+    VT_RAT_TYPE = 10,
+    VT_FRAME = 12,
+    VT_ROTATION = 14,
+    VT_MESSAGE = 16
   };
   int32_t id() const {
     return GetField<int32_t>(VT_ID, 0);
@@ -90,6 +93,15 @@ struct Player FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   int32_t y() const {
     return GetField<int32_t>(VT_Y, 0);
   }
+  int32_t rat_type() const {
+    return GetField<int32_t>(VT_RAT_TYPE, 0);
+  }
+  int32_t frame() const {
+    return GetField<int32_t>(VT_FRAME, 0);
+  }
+  int32_t rotation() const {
+    return GetField<int32_t>(VT_ROTATION, 0);
+  }
   const flatbuffers::String *message() const {
     return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
   }
@@ -98,6 +110,9 @@ struct Player FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyField<int32_t>(verifier, VT_ID, 4) &&
            VerifyField<int32_t>(verifier, VT_X, 4) &&
            VerifyField<int32_t>(verifier, VT_Y, 4) &&
+           VerifyField<int32_t>(verifier, VT_RAT_TYPE, 4) &&
+           VerifyField<int32_t>(verifier, VT_FRAME, 4) &&
+           VerifyField<int32_t>(verifier, VT_ROTATION, 4) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
            verifier.VerifyString(message()) &&
            verifier.EndTable();
@@ -116,6 +131,15 @@ struct PlayerBuilder {
   }
   void add_y(int32_t y) {
     fbb_.AddElement<int32_t>(Player::VT_Y, y, 0);
+  }
+  void add_rat_type(int32_t rat_type) {
+    fbb_.AddElement<int32_t>(Player::VT_RAT_TYPE, rat_type, 0);
+  }
+  void add_frame(int32_t frame) {
+    fbb_.AddElement<int32_t>(Player::VT_FRAME, frame, 0);
+  }
+  void add_rotation(int32_t rotation) {
+    fbb_.AddElement<int32_t>(Player::VT_ROTATION, rotation, 0);
   }
   void add_message(flatbuffers::Offset<flatbuffers::String> message) {
     fbb_.AddOffset(Player::VT_MESSAGE, message);
@@ -136,9 +160,15 @@ inline flatbuffers::Offset<Player> CreatePlayer(
     int32_t id = 0,
     int32_t x = 0,
     int32_t y = 0,
+    int32_t rat_type = 0,
+    int32_t frame = 0,
+    int32_t rotation = 0,
     flatbuffers::Offset<flatbuffers::String> message = 0) {
   PlayerBuilder builder_(_fbb);
   builder_.add_message(message);
+  builder_.add_rotation(rotation);
+  builder_.add_frame(frame);
+  builder_.add_rat_type(rat_type);
   builder_.add_y(y);
   builder_.add_x(x);
   builder_.add_id(id);
@@ -150,6 +180,9 @@ inline flatbuffers::Offset<Player> CreatePlayerDirect(
     int32_t id = 0,
     int32_t x = 0,
     int32_t y = 0,
+    int32_t rat_type = 0,
+    int32_t frame = 0,
+    int32_t rotation = 0,
     const char *message = nullptr) {
   auto message__ = message ? _fbb.CreateString(message) : 0;
   return GS::CreatePlayer(
@@ -157,6 +190,9 @@ inline flatbuffers::Offset<Player> CreatePlayerDirect(
       id,
       x,
       y,
+      rat_type,
+      frame,
+      rotation,
       message__);
 }
 

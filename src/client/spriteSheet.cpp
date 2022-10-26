@@ -1,12 +1,16 @@
 #include "SpriteSheet.hpp"
 
-SpriteSheet::SpriteSheet(rl::Texture2D texture, const int numberOfFrames, float scale, int fps)
-: texture(texture), numberOfFrames(numberOfFrames), scale(scale), fps(fps) {
+void drawSheetFrame(rl::Texture2D& texture, int frame, int frameWidth, int frameHeight, rl::Vector2 drawPosition, float rotation, float scale, rl::Vector2 origin)
+{
+    rl::DrawTexturePro(texture, {float(frameWidth * frame), 0.0f, (float)frameWidth, (float)texture.height}, {drawPosition.x, drawPosition.y, (float)frameWidth * scale, (float)frameHeight * scale}, {origin.x * scale, origin.y * scale}, rotation, {255, 255, 255, 255});
+}
+
+SpriteSheet::SpriteSheet(rl::Texture2D texture, int numberOfFrames, float scale, int fps, rl::Vector2 origin)
+: texture(texture), numberOfFrames(numberOfFrames), scale(scale), fps(fps), origin(origin) {
     frameWidth = texture.width / numberOfFrames;
     frameHeight = texture.height;
     currentFrame = 0;
-    facing = 1;
-    srcRect = {float(frameWidth * currentFrame), 0.0f, (float)frameWidth * facing, (float)texture.height};
+    srcRect = {float(frameWidth * currentFrame), 0.0f, (float)frameWidth, (float)texture.height};
     dstRect = {0, 0, (float)frameWidth * scale, (float)texture.height * scale};
 }
 
@@ -17,10 +21,10 @@ void SpriteSheet::animate(float deltaTime) {
         currentFrame += 1;
     }
     currentFrame = currentFrame % numberOfFrames;
-    srcRect = {float(frameWidth * currentFrame), 0.0f, (float)frameWidth * facing, (float)texture.height};
+    srcRect = {float(frameWidth * currentFrame), 0.0f, (float)frameWidth, (float)texture.height};
 }
 
 void SpriteSheet::draw(rl::Vector2 drawPosition, float rotation) {
     dstRect = {drawPosition.x, drawPosition.y, (float)frameWidth * scale, (float)frameHeight * scale};
-    rl::DrawTexturePro(texture, srcRect, dstRect, {frameWidth/2 * scale, frameHeight/2 * scale}, rotation, {255, 255, 255, 255});
+    rl::DrawTexturePro(texture, srcRect, dstRect, {origin.x * scale, origin.y * scale}, rotation, {255, 255, 255, 255});
 }

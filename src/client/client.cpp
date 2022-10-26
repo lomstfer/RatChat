@@ -3,9 +3,9 @@
 int main()
 {
     rl::InitWindow(WINW, WINH, "");
-    rl::SetTargetFPS(60);
+    rl::SetTargetFPS(rl::GetMonitorRefreshRate(rl::GetCurrentMonitor()));
     loadTextures();
-    Client client("192.168.194.79");
+    Client client("188.150.137.71");
 
     bool running = true;
     while (running)
