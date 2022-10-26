@@ -21,6 +21,6 @@ void SpriteSheet::animate(float deltaTime) {
 }
 
 void SpriteSheet::draw(rl::Vector2 drawPosition, float rotation) {
-    dstRect = {drawPosition.x, drawPosition.y, (float)frameWidth * scale, (float)texture.height * scale};
+    dstRect = {drawPosition.x, drawPosition.y, (float)frameWidth * scale, (float)frameHeight * scale};
     rl::DrawTexturePro(texture, srcRect, dstRect, {frameWidth/2 * scale, frameHeight/2 * scale}, rotation, {255, 255, 255, 255});
 }

@@ -37,8 +37,8 @@ struct Client
         ratSheet = SpriteSheet(TEX_SS_RAT, 8, 8, 12);
         _w = ratSheet.frameWidth * ratSheet.scale;
         _h = ratSheet.frameHeight * ratSheet.scale;
-        _camera_x = -WINW/2.f + _w/2.f;
-        _camera_y = -WINH/2.f + _h/2.f;
+        _camera_x = -WINW/2.f + ratSheet.frameWidth/2.f;
+        _camera_y = -WINH/2.f + ratSheet.frameHeight/2.f;
     }
 
     ENetHost* client;
@@ -201,8 +201,8 @@ struct Client
         }
         
 
-        float d_cam_x = _x - _camera_x - WINW/2.f + _w/2.f;
-        float d_cam_y = _y - _camera_y - WINH/2.f + _h/2.f;
+        float d_cam_x = _x - _camera_x - WINW/2.f + ratSheet.frameWidth/2.f;
+        float d_cam_y = _y - _camera_y - WINH/2.f + ratSheet.frameHeight/2.f;
         _camera_x += d_cam_x*5.f * dt;
         _camera_y += d_cam_y*5.f * dt;
     }
@@ -261,6 +261,7 @@ struct Client
 
     void render()
     {
+        ratSheet.animate(dt);
         rl::BeginDrawing();
             rl::ClearBackground(colorBg);
             fixDrawBackground();
@@ -273,13 +274,13 @@ struct Client
                     rl::Vector2 pDrawPos = {_x - _camera_x, _y - _camera_y};
                     //rl::DrawRectangle(pDrawPos.x - _w/2.f, pDrawPos.y - _h/2.f, _w, _h, {255, 255, 255, 255});
                     //rl::DrawTextureEx(ratTexture, {pDrawPos.x - _w/2.f, pDrawPos.y - _h/2.f}, 0, _scale, {255,255,255,255});
-                    ratSheet.draw({pDrawPos.x, pDrawPos.x}, 0);
+                    ratSheet.draw({pDrawPos.x, pDrawPos.y+30}, 0);
                     rl::DrawTextPro(font, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 40}, {0,0}, 0, 20, 0, {255,255,255,255});
                     continue;
                 }
                 rl::Vector2 pDrawPos = {players_show[i].x - _camera_x, players_show[i].y - _camera_y};
                 //rl::DrawRectangle(pDrawPos.x - _w/2.f, pDrawPos.y - _h/2.f, _w, _h, {255,255,255,255});
-                ratSheet.draw({pDrawPos.x, pDrawPos.x}, 0);
+                ratSheet.draw({pDrawPos.x, pDrawPos.y+30}, 0);
                 rl::DrawTextPro(font, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 40}, {0,0}, 0, 20, 0, {255,255,255,255});
             }
 
