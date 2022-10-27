@@ -4,7 +4,6 @@ int main()
 {
     rl::InitWindow(WINW, WINH, "");
     rl::SetTargetFPS(60);
-    rl::SetWindowState(rl::FLAG_FULLSCREEN_MODE);
     loadTextures();
     Client client("192.168.194.79");
 

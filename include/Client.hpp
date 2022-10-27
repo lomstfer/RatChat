@@ -76,7 +76,6 @@ struct Client
     float _y = 0;
     float _rotation = 0;
 
-    int _scale = 5;
     bool _pressed = false;
     float _pressed_time = 0;
     int _speed = 200;
@@ -166,7 +165,6 @@ struct Client
             if (rl::IsKeyPressed(rl::KEY_BACKSPACE) && typeMessage.length() > 0)
                 typeMessage.pop_back();
         }
-        
     }
 
     void inputSend()
