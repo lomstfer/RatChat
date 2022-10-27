@@ -280,7 +280,6 @@ struct Client
         rl::BeginDrawing();
             rl::ClearBackground(colorBg);
             fixDrawBackground();
-            rl::DrawCircle(100 - _camera_x, 200 - _camera_y, 50, {133, 211, 242, 230});
 
             // draw players
             for (int i = 0; i < players_show.size(); i++)
@@ -306,7 +305,7 @@ struct Client
             {
                 rl::Vector2 msgTextSize = rl::MeasureTextEx(font2, typeMessage.c_str(), 100, 0);
                 rl::DrawTextPro(font2, typeMessage.c_str(), {WINW/2.f - msgTextSize.x/2, 50}, {0,0}, 0, 100, 0, {255,255,255,255});
-                rl::DrawRectangle(WINW/2.f + msgTextSize.x/2, 50 + msgTextSize.y - 5, 25, (int)rl::GetTime()%2 * 5.f, {255,255,255,200});
+                rl::DrawRectangle(WINW/2.f + msgTextSize.x/2, 50 + msgTextSize.y - 20, 25, int(rl::GetTime()*5.0)%2 * 5.f, {255,255,255,200});
             }
             
         rl::EndDrawing();
