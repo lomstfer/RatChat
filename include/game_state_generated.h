@@ -21,19 +21,29 @@ struct GameStateBuilder;
 struct Player;
 struct PlayerBuilder;
 
+struct PlayingCard;
+struct PlayingCardBuilder;
+
 struct GameState FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef GameStateBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_PLAYERS = 4
+    VT_PLAYERS = 4,
+    VT_CARDS_ON_GROUND = 6
   };
   const flatbuffers::Vector<flatbuffers::Offset<GS::Player>> *players() const {
     return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<GS::Player>> *>(VT_PLAYERS);
+  }
+  const flatbuffers::Vector<flatbuffers::Offset<GS::PlayingCard>> *cards_on_ground() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<GS::PlayingCard>> *>(VT_CARDS_ON_GROUND);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_PLAYERS) &&
            verifier.VerifyVector(players()) &&
            verifier.VerifyVectorOfTables(players()) &&
+           VerifyOffset(verifier, VT_CARDS_ON_GROUND) &&
+           verifier.VerifyVector(cards_on_ground()) &&
+           verifier.VerifyVectorOfTables(cards_on_ground()) &&
            verifier.EndTable();
   }
 };
@@ -44,6 +54,9 @@ struct GameStateBuilder {
   flatbuffers::uoffset_t start_;
   void add_players(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<GS::Player>>> players) {
     fbb_.AddOffset(GameState::VT_PLAYERS, players);
+  }
+  void add_cards_on_ground(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<GS::PlayingCard>>> cards_on_ground) {
+    fbb_.AddOffset(GameState::VT_CARDS_ON_GROUND, cards_on_ground);
   }
   explicit GameStateBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -58,19 +71,24 @@ struct GameStateBuilder {
 
 inline flatbuffers::Offset<GameState> CreateGameState(
     flatbuffers::FlatBufferBuilder &_fbb,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<GS::Player>>> players = 0) {
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<GS::Player>>> players = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<GS::PlayingCard>>> cards_on_ground = 0) {
   GameStateBuilder builder_(_fbb);
+  builder_.add_cards_on_ground(cards_on_ground);
   builder_.add_players(players);
   return builder_.Finish();
 }
 
 inline flatbuffers::Offset<GameState> CreateGameStateDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
-    const std::vector<flatbuffers::Offset<GS::Player>> *players = nullptr) {
+    const std::vector<flatbuffers::Offset<GS::Player>> *players = nullptr,
+    const std::vector<flatbuffers::Offset<GS::PlayingCard>> *cards_on_ground = nullptr) {
   auto players__ = players ? _fbb.CreateVector<flatbuffers::Offset<GS::Player>>(*players) : 0;
+  auto cards_on_ground__ = cards_on_ground ? _fbb.CreateVector<flatbuffers::Offset<GS::PlayingCard>>(*cards_on_ground) : 0;
   return GS::CreateGameState(
       _fbb,
-      players__);
+      players__,
+      cards_on_ground__);
 }
 
 struct Player FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
@@ -194,6 +212,77 @@ inline flatbuffers::Offset<Player> CreatePlayerDirect(
       frame,
       rotation,
       message__);
+}
+
+struct PlayingCard FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef PlayingCardBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_VALUE = 4,
+    VT_X = 6,
+    VT_Y = 8,
+    VT_OWNER_ID = 10
+  };
+  int32_t value() const {
+    return GetField<int32_t>(VT_VALUE, 0);
+  }
+  int32_t x() const {
+    return GetField<int32_t>(VT_X, 0);
+  }
+  int32_t y() const {
+    return GetField<int32_t>(VT_Y, 0);
+  }
+  int32_t owner_id() const {
+    return GetField<int32_t>(VT_OWNER_ID, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_VALUE, 4) &&
+           VerifyField<int32_t>(verifier, VT_X, 4) &&
+           VerifyField<int32_t>(verifier, VT_Y, 4) &&
+           VerifyField<int32_t>(verifier, VT_OWNER_ID, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct PlayingCardBuilder {
+  typedef PlayingCard Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_value(int32_t value) {
+    fbb_.AddElement<int32_t>(PlayingCard::VT_VALUE, value, 0);
+  }
+  void add_x(int32_t x) {
+    fbb_.AddElement<int32_t>(PlayingCard::VT_X, x, 0);
+  }
+  void add_y(int32_t y) {
+    fbb_.AddElement<int32_t>(PlayingCard::VT_Y, y, 0);
+  }
+  void add_owner_id(int32_t owner_id) {
+    fbb_.AddElement<int32_t>(PlayingCard::VT_OWNER_ID, owner_id, 0);
+  }
+  explicit PlayingCardBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<PlayingCard> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<PlayingCard>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<PlayingCard> CreatePlayingCard(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t value = 0,
+    int32_t x = 0,
+    int32_t y = 0,
+    int32_t owner_id = 0) {
+  PlayingCardBuilder builder_(_fbb);
+  builder_.add_owner_id(owner_id);
+  builder_.add_y(y);
+  builder_.add_x(x);
+  builder_.add_value(value);
+  return builder_.Finish();
 }
 
 inline const GS::GameState *GetGameState(const void *buf) {

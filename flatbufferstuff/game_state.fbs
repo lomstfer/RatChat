@@ -2,6 +2,7 @@ namespace GS;
 
 table GameState {
     players:[Player];
+    cards_on_ground:[PlayingCard];
 }
 
 table Player {
@@ -12,6 +13,13 @@ table Player {
     frame:int;
     rotation:int;
     message:string;
+}
+
+table PlayingCard {
+    value:int;
+    x:int;
+    y:int;
+    owner_id:int;
 }
 
 root_type GameState;

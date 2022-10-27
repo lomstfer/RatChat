@@ -26,6 +26,17 @@ struct Player
     std::string message;
 };
 
+class PlayingCard
+{
+public:
+    PlayingCard(int value, int x, int y, int owner_id)
+    : value(value), x(x), y(y), owner_id(owner_id) {}
+    int value;
+    int x;
+    int y;
+    int owner_id;
+};
+
 unsigned char randChar(int lower, int higher)
 {
     return (unsigned char)(rand()%(higher - lower + 1) + lower);

@@ -1,6 +1,6 @@
 INCLUDE = -I include
 CLIENT_LIBS = -L lib -lenet -lraylib -lopengl32 -lgdi32 -lwinmm -lws2_32
-CLIENT_FLAGS = -mwindows
+CLIENT_FLAGS = 
 SERVER_LIBS = -L lib -lenet -lwinmm -lws2_32
 SERVER_FLAGS =
 

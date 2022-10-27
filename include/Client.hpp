@@ -1,11 +1,7 @@
 #include "game_state_generated.h"
 #include "Globals.hpp"
-#include "Textures.hpp"
-#include "SpriteSheet.hpp"
-#include <raylib.h>
 #include <iostream>
 #include <enet/enet.h>
-#include <string>
 #include <vector>
 #include <math.h>
 
@@ -69,6 +65,8 @@ struct Client
     std::vector<Player> players_show;
     std::vector<Player> temp_players;
 
+    std::vector<PlayingCard> cards_on_ground;
+
     SpriteSheet ratSheet;
     int _ratType;
 
@@ -89,7 +87,7 @@ struct Client
 
     std::string message = "";
     std::string typeMessage = "";
-    bool typingMessage = false;
+    bool isTypingMessage = false;
 
     float dt;
     void update()
@@ -107,6 +105,7 @@ struct Client
                 case ENET_EVENT_TYPE_RECEIVE:
                     // get world info (all players data)
                     auto game_state = GS::GetGameState(event.packet->data);
+                    
                     players_server.clear();
                     for (int i = 0; i < game_state->players()->size(); i++)
                     {
@@ -123,6 +122,13 @@ struct Client
                             players_show[i].y = temp_players[i].y;
                         }
                     }
+
+                    cards_on_ground.clear();
+                    for (int i = 0; i < game_state->cards_on_ground()->size(); i++)
+                    {
+                        cards_on_ground.emplace_back(game_state->cards_on_ground()->Get(i)->value(), game_state->cards_on_ground()->Get(i)->x(), game_state->cards_on_ground()->Get(i)->y(), game_state->cards_on_ground()->Get(i)->owner_id());
+                    }
+
                     enet_packet_destroy(event.packet);
                     break;
             }
@@ -132,6 +138,8 @@ struct Client
 
         inputSend();
 
+        cardsInputSend();
+
         // interpolate other players positions to their new positions that come from server and are server-known
         interpolatePlayers();
 
@@ -140,7 +148,7 @@ struct Client
 
     void getMessageSend()
     {
-        if (rl::IsKeyPressed(rl::KEY_ENTER) && typingMessage)
+        if (rl::IsKeyPressed(rl::KEY_ENTER) && isTypingMessage)
         {
             message = typeMessage;
             fb_builder.Clear();
@@ -149,8 +157,8 @@ struct Client
             typeMessage.clear();
         }
         if (rl::IsKeyPressed(rl::KEY_ENTER))
-            typingMessage = !typingMessage;
-        if (typingMessage)
+            isTypingMessage = !isTypingMessage;
+        if (isTypingMessage)
         {
             // Get char pressed (unicode character) on the queue
             int key = rl::GetCharPressed();
@@ -221,6 +229,20 @@ struct Client
         _camera_y += d_cam_y*5.f * dt;
     }
 
+    void cardsInputSend()
+    {
+        if (isTypingMessage)
+            return;
+        if (rl::IsKeyPressed(rl::KEY_SPACE))
+        {
+            Log("card place!");
+            cards_on_ground.emplace_back(1, _x, _y, _id);
+            fb_builder.Clear();
+            fb_builder.Finish(GS::CreatePlayingCard(fb_builder, cards_on_ground.back().value, cards_on_ground.back().x, cards_on_ground.back().y, cards_on_ground.back().owner_id));
+            enet_peer_send(host, 0, enet_packet_create(fb_builder.GetBufferPointer(), fb_builder.GetSize(), 0));
+        }
+    }
+
     void interpolatePlayers()
     {
         for (int i = 0; i < players_show.size(); i++)
@@ -279,6 +301,11 @@ struct Client
             rl::ClearBackground(colorBg);
             fixDrawBackground();
 
+            for (int i = 0; i < cards_on_ground.size(); i++)
+            {
+                rl::DrawRectangle(cards_on_ground[i].x - _camera_x, cards_on_ground[i].y - _camera_y, 40, 70, {255,255,255,255});
+            }
+
             // draw players
             for (int i = 0; i < players_show.size(); i++)
             {
@@ -299,7 +326,7 @@ struct Client
             std::string coordsText = std::to_string(ftint(_x/10.f)) + "; " + std::to_string(ftint(-_y/10.f));
             rl::DrawTextPro(font, coordsText.c_str(), {0,0}, {0,0}, 0, 30, 0, {255,255,255,255});
 
-            if (typingMessage)
+            if (isTypingMessage)
             {
                 rl::Vector2 msgTextSize = rl::MeasureTextEx(font2, typeMessage.c_str(), 100, 0);
                 rl::DrawTextPro(font2, typeMessage.c_str(), {WINW/2.f - msgTextSize.x/2, 50}, {0,0}, 0, 100, 0, {255,255,255,255});

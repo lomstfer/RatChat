@@ -27,10 +27,12 @@ struct Server
 
     flatbuffers::FlatBufferBuilder fb_builder;
 
-    std::vector<flatbuffers::Offset<GS::Player>> players_vector;
-
     // players_server vector with server positions
     std::vector<Player> players_server;
+    std::vector<flatbuffers::Offset<GS::Player>> players_vector;
+
+    std::vector<PlayingCard> cards_on_ground;
+    std::vector<flatbuffers::Offset<GS::PlayingCard>> cards_on_ground_vector;
 
     float dt_time = 0;
     float dt_last_time = 0;
@@ -42,7 +44,8 @@ struct Server
     bool broadcast_allowed = false;
     
     void update()
-    {        
+    {
+        Log("----");
         if (enet_host_service(host, &event, 1000) > 0)
         {
             switch (event.type)
@@ -56,7 +59,22 @@ struct Server
                 break;
 
             case ENET_EVENT_TYPE_RECEIVE:
-                getClientInfo(event.packet->data);
+                {
+                    flatbuffers::Verifier verifier(event.packet->data, event.packet->dataLength);
+                    // not working, använda union i flatbuffer? hur göra? ens användsbart?
+                    if (verifier.VerifyBuffer<GS::Player>(nullptr))
+                    {
+                        getClientInfo(event.packet->data);
+                        Log("GET PLAYER INFO");
+                    }
+                        
+                    if (verifier.VerifyBuffer<GS::PlayingCard>(nullptr))
+                    {
+                        getCardInfo(event.packet->data);
+                        Log("GET CARD INFO");
+                    }
+                        
+                }
                 broadcastState();
                 enet_packet_destroy(event.packet);
                 break;
@@ -90,7 +108,7 @@ struct Server
         }
     }
 
-    void getClientInfo(const void *buf)
+    void getClientInfo(const void* buf)
     {
         auto pData = flatbuffers::GetRoot<GS::Player>(buf);
         for (int i = 0; i < players_server.size(); i++)
@@ -111,6 +129,23 @@ struct Server
         }
     }
 
+    void getCardInfo(const void* buf)
+    {
+        auto cardData = flatbuffers::GetRoot<GS::PlayingCard>(buf);
+        //bool found = false;
+        /* for (int i = 0; i < cards_on_ground.size(); i++)
+        {
+            if (cards_on_ground[i].owner_id == cardData->owner_id())
+            {
+                found = true;
+                return;
+            }
+        } */
+        /* if (found)
+            return; */
+        cards_on_ground.emplace_back(cardData->value(), cardData->x(), cardData->y(), cardData->owner_id());
+    }
+
     void broadcastState()
     {
         fb_builder.Clear();
@@ -119,7 +154,12 @@ struct Server
         {
             players_vector.push_back(GS::CreatePlayer(fb_builder, players_server[i].id, players_server[i].x, players_server[i].y, players_server[i].rat_type, players_server[i].frame, players_server[i].rotation, fb_builder.CreateString(players_server[i].message)));
         }
-        auto game_state = GS::CreateGameState(fb_builder, fb_builder.CreateVector(players_vector));
+        cards_on_ground_vector.clear();
+        for (int i = 0; i < cards_on_ground.size(); i++)
+        {
+            cards_on_ground_vector.push_back(GS::CreatePlayingCard(fb_builder, cards_on_ground[i].value, cards_on_ground[i].x, cards_on_ground[i].y, cards_on_ground[i].owner_id));
+        }
+        auto game_state = GS::CreateGameState(fb_builder, fb_builder.CreateVector(players_vector), fb_builder.CreateVector(cards_on_ground_vector));
         fb_builder.Finish(game_state);
         enet_host_broadcast(host, 0, enet_packet_create(fb_builder.GetBufferPointer(), fb_builder.GetSize(), 0));
     }
