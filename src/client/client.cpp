@@ -3,7 +3,7 @@
 int main()
 {
     rl::InitWindow(WINW, WINH, "");
-    rl::SetTargetFPS(rl::GetMonitorRefreshRate(rl::GetCurrentMonitor()));
+    rl::SetTargetFPS(/* rl::GetMonitorRefreshRate(rl::GetCurrentMonitor()) */45);
     loadTextures();
     Client client("188.150.137.71");
 

@@ -3,18 +3,20 @@
 
 #include <string>
 #include <raylib.h>
+#include "SpriteSheet.hpp"
+#include "Textures.hpp"
 
 #define Log(x) std::cout << x << std::endl
 #define Lognl(x) std::cout << std::endl << x << std::endl
-#define WINW 1920
-#define WINH 1080
+#define WINW 1280
+#define WINH 720
 #define SPRITE_SCALE 4
 
 struct Player
 {
     Player() = default;
-    Player(int id, int x, int y)
-    : id(id), x(x), y(y) {}
+    Player(int id, int x, int y, int rat_type, int frame, int rotation)
+    : id(id), x(x), y(y), rat_type(rat_type), frame(frame), rotation(rotation) {}
     int id;
     float x;
     float y;

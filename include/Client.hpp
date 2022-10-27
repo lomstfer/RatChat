@@ -26,9 +26,10 @@ struct Client
             Log("error: connecting to host");
         fb_builder = flatbuffers::FlatBufferBuilder(1024);
         font = rl::LoadFont("assets/UbuntuCondensed-Regular.ttf");
+        font2 = rl::LoadFont("assets/NanumPenScript-Regular.ttf");
 
         bgTexture = TEX_DESERT;
-        bgSize = {(float)bgTexture.width*bgScale, (float)bgTexture.height*bgScale};
+        bgSize = {(float)bgTexture.width*SPRITE_SCALE, (float)bgTexture.height*SPRITE_SCALE};
         for (int x = -3; x < 3; x++)
         {
             for (int y = -3; y < 3; y++)
@@ -38,7 +39,7 @@ struct Client
         }
 
         _ratType = rand()%7;
-        ratSheet = SpriteSheet(TEX_RATS[_ratType], 8, 4, 12, {12,9});
+        ratSheet = SpriteSheet(TEX_RATS[_ratType], 8, SPRITE_SCALE, 12, {12,7});
         _camera_x = -WINW/2.f + ratSheet.frameWidth/2.f;
         _camera_y = -WINH/2.f + ratSheet.frameHeight/2.f;
     }
@@ -51,8 +52,8 @@ struct Client
     flatbuffers::FlatBufferBuilder fb_builder;
 
     rl::Font font;
+    rl::Font font2;
     rl::Texture2D bgTexture;
-    float bgScale = 5;
     rl::Vector2 bgSize;
 
     int send_fps = 10;
@@ -110,11 +111,8 @@ struct Client
                     players_server.clear();
                     for (int i = 0; i < game_state->players()->size(); i++)
                     {
-                        players_server.emplace_back(game_state->players()->Get(i)->id(), game_state->players()->Get(i)->x(), game_state->players()->Get(i)->y());
+                        players_server.emplace_back(game_state->players()->Get(i)->id(), game_state->players()->Get(i)->x(), game_state->players()->Get(i)->y(), game_state->players()->Get(i)->rat_type(), game_state->players()->Get(i)->frame(), game_state->players()->Get(i)->rotation());
                         players_server.back().message = flatbuffers::GetString(game_state->players()->Get(i)->message());
-                        players_server.back().rat_type = game_state->players()->Get(i)->rat_type();
-                        players_server.back().frame = game_state->players()->Get(i)->frame();
-                        players_server.back().rotation = game_state->players()->Get(i)->rotation();
                     }
                     temp_players = players_show;
                     players_show = players_server;
@@ -231,30 +229,30 @@ struct Client
         {
             if (players_show[i].id == players_server[i].id)
             {
-            if (players_show[i].x < players_server[i].x)
-            {
-                players_show[i].x += _speed * dt;
-                if (players_show[i].x > players_server[i].x)
-                    players_show[i].x = players_server[i].x;
-            }
-            if (players_show[i].x > players_server[i].x)
-            {
-                players_show[i].x -= _speed * dt;
                 if (players_show[i].x < players_server[i].x)
-                    players_show[i].x = players_server[i].x;
-            }
-            if (players_show[i].y < players_server[i].y)
-            {
-                players_show[i].y += _speed * dt;
-                if (players_show[i].y > players_server[i].y)
-                    players_show[i].y = players_server[i].y;
-            }
-            if (players_show[i].y > players_server[i].y)
-            {
-                players_show[i].y -= _speed * dt;
+                {
+                    players_show[i].x += _speed * dt;
+                    if (players_show[i].x > players_server[i].x)
+                        players_show[i].x = players_server[i].x;
+                }
+                if (players_show[i].x > players_server[i].x)
+                {
+                    players_show[i].x -= _speed * dt;
+                    if (players_show[i].x < players_server[i].x)
+                        players_show[i].x = players_server[i].x;
+                }
                 if (players_show[i].y < players_server[i].y)
-                    players_show[i].y = players_server[i].y;
-            }
+                {
+                    players_show[i].y += _speed * dt;
+                    if (players_show[i].y > players_server[i].y)
+                        players_show[i].y = players_server[i].y;
+                }
+                if (players_show[i].y > players_server[i].y)
+                {
+                    players_show[i].y -= _speed * dt;
+                    if (players_show[i].y < players_server[i].y)
+                        players_show[i].y = players_server[i].y;
+                }
             }
         }
     }
@@ -273,41 +271,41 @@ struct Client
             if (_y - bg_list[i].y > bgSize.y*(rowcol/2) + bgSize.y/2)
                 bg_list[i].y += rowcol*bgSize.y;
             
-            rl::DrawTextureEx(bgTexture, {bg_list[i].x - _camera_x, bg_list[i].y - _camera_y}, 0, bgScale, {255,255,255,255});
+            rl::DrawTextureEx(bgTexture, {bg_list[i].x - _camera_x, bg_list[i].y - _camera_y}, 0, SPRITE_SCALE, {255,255,255,255});
         }
     }
 
     void render()
     {
-        
         rl::BeginDrawing();
             rl::ClearBackground(colorBg);
             fixDrawBackground();
+            rl::DrawCircle(100 - _camera_x, 200 - _camera_y, 50, {133, 211, 242, 230});
 
             // draw players
             for (int i = 0; i < players_show.size(); i++)
             {
-                rl::Vector2 msgTextSize = rl::MeasureTextEx(font, players_show[i].message.c_str(), 20, 0);
+                rl::Vector2 msgTextSize = rl::MeasureTextEx(font2, players_show[i].message.c_str(), 30, 0);
                 if (players_show[i].id == _id)
                 {
                     rl::Vector2 pDrawPos = {_x - _camera_x, _y - _camera_y};
-                    ratSheet.draw({pDrawPos.x, pDrawPos.y+30}, _rotation);
-                    rl::DrawTextPro(font, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 40}, {0,0}, 0, 20, 0, {255,255,255,255});
+                    ratSheet.draw({pDrawPos.x, pDrawPos.y}, _rotation);
+                    rl::DrawTextPro(font2, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 60}, {0,0}, 0, 30, 0, {255,255,255,255});
                     continue;
                 }
                 rl::Vector2 pDrawPos = {players_show[i].x - _camera_x, players_show[i].y - _camera_y};
-                drawSheetFrame(TEX_RATS[players_show[i].rat_type], players_show[i].frame, ratSheet.frameWidth, ratSheet.frameHeight, {pDrawPos.x, pDrawPos.y+30}, players_show[i].rotation, ratSheet.scale, {12,9});
-                rl::DrawTextPro(font, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 40}, {0,0}, 0, 20, 0, {255,255,255,255});
+                drawSheetFrame(TEX_RATS[players_show[i].rat_type], players_show[i].frame, ratSheet.frameWidth, ratSheet.frameHeight, pDrawPos, players_show[i].rotation, ratSheet.scale, ratSheet.origin);
+                rl::DrawTextPro(font2, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 60}, {0,0}, 0, 30, 0, {255,255,255,255});
             }
             // ------------
 
             std::string coordsText = std::to_string(ftint(_x/10.f)) + "; " + std::to_string(ftint(-_y/10.f));
-            rl::DrawTextPro(font, coordsText.c_str(), {0,0}, {0,0}, 0, 20, 0, {255,255,255,255});
+            rl::DrawTextPro(font, coordsText.c_str(), {0,0}, {0,0}, 0, 30, 0, {255,255,255,255});
 
             if (typingMessage)
             {
-                rl::Vector2 msgTextSize = rl::MeasureTextEx(font, typeMessage.c_str(), 50, 0);
-                rl::DrawTextPro(font, typeMessage.c_str(), {WINW/2.f - msgTextSize.x/2, 50}, {0,0}, 0, 50, 0, {255,255,255,255});
+                rl::Vector2 msgTextSize = rl::MeasureTextEx(font2, typeMessage.c_str(), 100, 0);
+                rl::DrawTextPro(font2, typeMessage.c_str(), {WINW/2.f - msgTextSize.x/2, 50}, {0,0}, 0, 100, 0, {255,255,255,255});
                 rl::DrawRectangle(WINW/2.f + msgTextSize.x/2, 50 + msgTextSize.y - 5, 25, (int)rl::GetTime()%2 * 5.f, {255,255,255,200});
             }
             

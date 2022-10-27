@@ -3,6 +3,8 @@
 
 #include <raylib.h>
 
+#define RAT_WIDTH 24
+#define RAT_HEIGHT 24
 
 extern rl::Texture2D TEX_DESERT;
 

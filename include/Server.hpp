@@ -75,7 +75,7 @@ struct Server
 
     void addClient(int id)
     {        
-        players_server.emplace_back(id, 0, 0);
+        players_server.emplace_back(id, 0, 0, 0, 0, 0);
     }
 
     void removeClient(int id)
