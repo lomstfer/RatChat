@@ -66,6 +66,7 @@ struct Client
     std::vector<Player> temp_players;
 
     std::vector<PlayingCard> cards_on_ground;
+    rl::Vector2 card_dims = {10 * SPRITE_SCALE, 16 * SPRITE_SCALE};
 
     SpriteSheet ratSheet;
     int _ratType;
@@ -233,12 +234,37 @@ struct Client
     {
         if (isTypingMessage)
             return;
-        if (rl::IsKeyPressed(rl::KEY_SPACE))
+        if (rl::IsKeyDown(rl::KEY_SPACE))
         {
+            int temp_value = -1;
+
+            if (rl::IsKeyPressed(rl::KEY_ONE))
+                temp_value = 1;
+            if (rl::IsKeyPressed(rl::KEY_TWO))
+                temp_value = 2;
+            if (rl::IsKeyPressed(rl::KEY_THREE))
+                temp_value = 3;
+            if (rl::IsKeyPressed(rl::KEY_FOUR))
+                temp_value = 4;
+            if (rl::IsKeyPressed(rl::KEY_FIVE))
+                temp_value = 5;
+            if (rl::IsKeyPressed(rl::KEY_SIX))
+                temp_value = 6;
+            if (rl::IsKeyPressed(rl::KEY_SEVEN))
+                temp_value = 7;
+            if (rl::IsKeyPressed(rl::KEY_EIGHT))
+                temp_value = 8;
+            if (rl::IsKeyPressed(rl::KEY_NINE))
+                temp_value = 9;
+
+            if (temp_value == -1)
+                return;
+            
             Log("card place!");
-            cards_on_ground.emplace_back(1, _x, _y, _id);
+            cards_on_ground.emplace_back(temp_value, _x, _y, _id);
             fb_builder.Clear();
-            fb_builder.Finish(GS::CreatePlayingCard(fb_builder, cards_on_ground.back().value, cards_on_ground.back().x, cards_on_ground.back().y, cards_on_ground.back().owner_id));
+            auto card = GS::CreatePlayingCard(fb_builder, cards_on_ground.back().value, cards_on_ground.back().x - card_dims.x/2, cards_on_ground.back().y  - card_dims.y/2, cards_on_ground.back().owner_id);
+            fb_builder.Finish(GS::CreatePlayer(fb_builder, _id, _x, _y, _ratType, ratSheet.currentFrame, int(_rotation), 0, card));
             enet_peer_send(host, 0, enet_packet_create(fb_builder.GetBufferPointer(), fb_builder.GetSize(), 0));
         }
     }
@@ -304,6 +330,7 @@ struct Client
             for (int i = 0; i < cards_on_ground.size(); i++)
             {
                 rl::DrawRectangle(cards_on_ground[i].x - _camera_x, cards_on_ground[i].y - _camera_y, 40, 70, {255,255,255,255});
+                rl::DrawTextPro(font2, std::to_string(cards_on_ground[i].value).c_str(), {(float)cards_on_ground[i].x - _camera_x + 5, (float)cards_on_ground[i].y - _camera_y - 15}, {0,0}, 0, 100, 0, {0,0,0,255});
             }
 
             // draw players

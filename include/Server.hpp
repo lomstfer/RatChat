@@ -54,27 +54,14 @@ struct Server
                 Lognl("connected:");
                 Log("\tid: " + std::to_string(event.peer->incomingPeerID));
                 Log("\taddress: " + std::to_string(event.peer->address.host));
+
+                // to do: multiple different packets - for optimization
                 addClient(event.peer->incomingPeerID);
                 broadcastState();
                 break;
 
             case ENET_EVENT_TYPE_RECEIVE:
-                {
-                    flatbuffers::Verifier verifier(event.packet->data, event.packet->dataLength);
-                    // not working, använda union i flatbuffer? hur göra? ens användsbart?
-                    if (verifier.VerifyBuffer<GS::Player>(nullptr))
-                    {
-                        getClientInfo(event.packet->data);
-                        Log("GET PLAYER INFO");
-                    }
-                        
-                    if (verifier.VerifyBuffer<GS::PlayingCard>(nullptr))
-                    {
-                        getCardInfo(event.packet->data);
-                        Log("GET CARD INFO");
-                    }
-                        
-                }
+                getClientInfo(event.packet->data);
                 broadcastState();
                 enet_packet_destroy(event.packet);
                 break;
@@ -127,22 +114,15 @@ struct Server
                     
             }
         }
+        if (pData->placed_card() != 0)
+        {
+            getCardInfo(event.packet->data);
+        }
     }
 
     void getCardInfo(const void* buf)
     {
-        auto cardData = flatbuffers::GetRoot<GS::PlayingCard>(buf);
-        //bool found = false;
-        /* for (int i = 0; i < cards_on_ground.size(); i++)
-        {
-            if (cards_on_ground[i].owner_id == cardData->owner_id())
-            {
-                found = true;
-                return;
-            }
-        } */
-        /* if (found)
-            return; */
+        auto cardData = flatbuffers::GetRoot<GS::Player>(buf)->placed_card();
         cards_on_ground.emplace_back(cardData->value(), cardData->x(), cardData->y(), cardData->owner_id());
     }
 

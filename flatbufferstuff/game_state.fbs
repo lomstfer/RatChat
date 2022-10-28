@@ -13,6 +13,8 @@ table Player {
     frame:int;
     rotation:int;
     message:string;
+    
+    placed_card:PlayingCard;
 }
 
 table PlayingCard {
