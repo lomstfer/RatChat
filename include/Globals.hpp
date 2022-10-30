@@ -30,6 +30,7 @@ struct Player
 class PlayingCard
 {
 public:
+    PlayingCard() = default; 
     PlayingCard(int unique_id, int value, int x, int y)
     : unique_id(unique_id), value(value), x(x), y(y) {}
     int unique_id;

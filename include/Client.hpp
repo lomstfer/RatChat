@@ -66,8 +66,13 @@ struct Client
     std::vector<Player> temp_players;
 
     std::vector<PlayingCard> cards_on_ground;
-    rl::Vector2 card_dims = {10 * SPRITE_SCALE, 16 * SPRITE_SCALE};
+    std::vector<PlayingCard> cards_on_hand;
+    rl::Vector2 card_dims = {10 * SPRITE_SCALE, 14 * SPRITE_SCALE};
+    rl::Vector2 card_dims_hand = {15 * SPRITE_SCALE, 21 * SPRITE_SCALE};
+    float cards_on_hand_space = card_dims_hand.x + card_dims.x/2.0;
     int cards_id_increment = 0;
+    PlayingCard card_moving;
+    bool moving_card = false;
 
     SpriteSheet ratSheet;
     int _ratType;
@@ -116,6 +121,8 @@ struct Client
         inputSend();
 
         cardsInputSend();
+
+        cardsFromHand();
 
         // interpolate other players positions to their new positions that come from server and are server-known
         interpolatePlayers();
@@ -235,6 +242,14 @@ struct Client
         _camera_y += d_cam_y*5.f * dt;
     }
 
+    void addCardSend(const PlayingCard& card)
+    {
+        cards_on_ground.emplace_back(rand()%999999, card.value, card.x, card.y);
+        fb_builder.Clear();
+        fb_builder.Finish(GS::CreatePlayingCard(fb_builder, FLAG_PLAYINGCARD_DATA, FLAG_PLAYINGCARD_ADD, cards_on_ground.back().unique_id, cards_on_ground.back().value, cards_on_ground.back().x, cards_on_ground.back().y));
+        enet_peer_send(host, 0, enet_packet_create(fb_builder.GetBufferPointer(), fb_builder.GetSize(), 0));
+    }
+
     void cardsInputSend()
     {
         if (isTypingMessage)
@@ -243,12 +258,11 @@ struct Client
         {
             if (rl::IsKeyPressed(rl::KEY_SPACE))
             {
-                Log("remove");
-                for (int i = 0; i < cards_on_ground.size(); i++)
+                for (int i = cards_on_ground.size() - 1; i >= 0; i--)
                 {
                     if (rl::CheckCollisionRecs({_x-4*SPRITE_SCALE, _y-4*SPRITE_SCALE, (float)ratSheet.frameWidth+2*SPRITE_SCALE, (float)ratSheet.frameHeight+2*SPRITE_SCALE}, {(float)cards_on_ground[i].x, (float)cards_on_ground[i].y, card_dims.x, card_dims.y}))
                     {
-                        Log("removecollide");
+                        cards_on_hand.push_back(cards_on_ground[i]);
                         fb_builder.Clear();
                         auto card = GS::CreatePlayingCard(fb_builder, FLAG_PLAYINGCARD_DATA, FLAG_PLAYINGCARD_REMOVE, cards_on_ground[i].unique_id);
                         fb_builder.Finish(card);
@@ -279,14 +293,42 @@ struct Client
             if (rl::IsKeyPressed(rl::KEY_NINE))
                 temp_value = 9;
 
-            if (temp_value == -1)
-                return;
-            
-            cards_id_increment += 1;
-            cards_on_ground.emplace_back(rand()%999999, temp_value, _x - card_dims.x/2, _y - card_dims.y/2);
-            fb_builder.Clear();
-            fb_builder.Finish(GS::CreatePlayingCard(fb_builder, FLAG_PLAYINGCARD_DATA, FLAG_PLAYINGCARD_ADD, cards_on_ground.back().unique_id, cards_on_ground.back().value, cards_on_ground.back().x, cards_on_ground.back().y));
-            enet_peer_send(host, 0, enet_packet_create(fb_builder.GetBufferPointer(), fb_builder.GetSize(), 0));
+            if (temp_value != -1)
+                addCardSend(PlayingCard(rand()%999999, temp_value, _x - card_dims.x/2, _y - card_dims.y/2));
+        }
+    }
+
+    void cardsFromHand()
+    {
+        bool mouse_pressed = false;
+        if (rl::IsMouseButtonPressed(rl::MOUSE_BUTTON_LEFT))
+            mouse_pressed = true;
+        if (mouse_pressed)
+        {
+            for (int i = 0; i < cards_on_hand.size(); i++)
+            {
+                if (rl::CheckCollisionPointRec(rl::GetMousePosition(), {(float)cards_on_hand[i].x, (float)cards_on_hand[i].y, card_dims_hand.x, card_dims_hand.y}))
+                {
+                    Log("pressed the card");
+                    card_moving = cards_on_hand[i];
+                    moving_card = true;
+                }
+            }
+        }
+        if (rl::IsMouseButtonReleased(rl::MOUSE_BUTTON_LEFT) && moving_card)
+        {
+            moving_card = false;
+            card_moving.x = rl::GetMousePosition().x + _camera_x - card_dims.x/2;
+            card_moving.y = rl::GetMousePosition().y + _camera_y - card_dims.x/2;
+            addCardSend(card_moving);
+            for (int i = 0; i < cards_on_hand.size(); i++)
+            {
+                if (cards_on_hand[i].unique_id == card_moving.unique_id)
+                {
+                    cards_on_hand.erase(cards_on_hand.begin() + i);
+                    break;
+                }
+            }
         }
     }
 
@@ -348,11 +390,12 @@ struct Client
             rl::ClearBackground(colorBg);
             fixDrawBackground();
 
-            // cards
+            // cards on ground
             for (int i = 0; i < cards_on_ground.size(); i++)
             {
                 rl::DrawRectangle(cards_on_ground[i].x - _camera_x, cards_on_ground[i].y - _camera_y, card_dims.x, card_dims.y, {255,255,255,255});
                 rl::DrawTextPro(font2, std::to_string(cards_on_ground[i].value).c_str(), {(float)cards_on_ground[i].x - _camera_x + 5, (float)cards_on_ground[i].y - _camera_y - 15}, {0,0}, 0, 100, 0, {0,0,0,255});
+                rl::DrawTextPro(font2, std::to_string(cards_on_ground[i].value).c_str(), {(float)cards_on_ground[i].x - _camera_x + 5, (float)cards_on_ground[i].y - _camera_y - 7}, {0,0}, 0, 40, 0, {0,0,0,255});
             }
 
             // draw players
@@ -371,6 +414,27 @@ struct Client
                 rl::DrawTextPro(font2, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 60}, {0,0}, 0, 30, 0, {255,255,255,255});
             }
             // ------------
+
+            // cards on hand
+            for (int i = 0; i < cards_on_hand.size(); i++)
+            {
+                float total_width = cards_on_hand.size() * cards_on_hand_space;
+                if (total_width >= WINW)
+                {
+                    cards_on_hand_space *= 0.99;
+                    total_width = cards_on_hand.size() * cards_on_hand_space;
+                }
+                cards_on_hand[i].x = WINW/2 - total_width/2 + cards_on_hand_space*i;
+                cards_on_hand[i].y = WINH - card_dims.y - 50;
+                rl::DrawRectangle(cards_on_hand[i].x, cards_on_hand[i].y, card_dims_hand.x, card_dims_hand.y, {255,255,255,255});
+                rl::DrawTextPro(font2, std::to_string(cards_on_hand[i].value).c_str(), {(float)cards_on_hand[i].x + 5, (float)cards_on_hand[i].y - 15}, {0,0}, 0, 100*1.5, 0, {0,0,0,255});
+            }
+
+            if (moving_card)
+            {
+                rl::DrawRectangle(rl::GetMousePosition().x - card_dims_hand.x/2, rl::GetMousePosition().y - card_dims_hand.y/2, card_dims_hand.x, card_dims_hand.y, {255,255,255,255});
+                rl::DrawTextPro(font2, std::to_string(card_moving.value).c_str(), {(float)rl::GetMousePosition().x + 5 - card_dims_hand.x/2, (float)rl::GetMousePosition().y - 15 - card_dims_hand.y/2}, {0,0}, 0, 100*1.5, 0, {0,0,0,255});
+            }
 
             std::string coordsText = std::to_string(ftint(_x/10.f)) + "; " + std::to_string(ftint(-_y/10.f));
             rl::DrawTextPro(font, coordsText.c_str(), {0,0}, {0,0}, 0, 30, 0, {255,255,255,255});
