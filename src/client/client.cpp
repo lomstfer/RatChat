@@ -2,10 +2,10 @@
 
 int main()
 {
+    rl::SetConfigFlags(rl::FLAG_VSYNC_HINT);
     rl::InitWindow(WINW, WINH, "");
-    rl::SetTargetFPS(60);
     loadTextures();
-    Client client("192.168.194.79");
+    Client client("192.168.0.113");
 
     bool running = true;
     while (running)

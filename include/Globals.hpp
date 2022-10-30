@@ -3,6 +3,7 @@
 
 #include <string>
 #include <raylib.h>
+#include <iostream>
 #include "SpriteSheet.hpp"
 #include "Textures.hpp"
 
@@ -29,12 +30,20 @@ struct Player
 class PlayingCard
 {
 public:
-    PlayingCard(int value, int x, int y, int owner_id)
-    : value(value), x(x), y(y), owner_id(owner_id) {}
+    PlayingCard(int unique_id, int value, int x, int y)
+    : unique_id(unique_id), value(value), x(x), y(y) {}
+    int unique_id;
     int value;
     int x;
     int y;
-    int owner_id;
+};
+
+enum packetTypes
+{
+    FLAG_PLAYER_DATA,
+    FLAG_PLAYINGCARD_DATA,
+    FLAG_PLAYINGCARD_ADD,
+    FLAG_PLAYINGCARD_REMOVE,
 };
 
 unsigned char randChar(int lower, int higher)
@@ -61,6 +70,12 @@ int clamp(int num, int lower, int higher)
 float lerp(float v0, float v1, float t) 
 {
     return v0 + t * (v1 - v0);
+}
+
+std::ostream& operator<<(std::ostream& stream, const rl::Vector2& vec2)
+{
+    stream << (int)vec2.x << "; " << (int)vec2.y;
+    return stream;
 }
 
 #endif

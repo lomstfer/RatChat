@@ -67,6 +67,7 @@ struct Client
 
     std::vector<PlayingCard> cards_on_ground;
     rl::Vector2 card_dims = {10 * SPRITE_SCALE, 16 * SPRITE_SCALE};
+    int cards_id_increment = 0;
 
     SpriteSheet ratSheet;
     int _ratType;
@@ -104,32 +105,7 @@ struct Client
                     send_now = true;
                     break;
                 case ENET_EVENT_TYPE_RECEIVE:
-                    // get world info (all players data)
-                    auto game_state = GS::GetGameState(event.packet->data);
-                    
-                    players_server.clear();
-                    for (int i = 0; i < game_state->players()->size(); i++)
-                    {
-                        players_server.emplace_back(game_state->players()->Get(i)->id(), game_state->players()->Get(i)->x(), game_state->players()->Get(i)->y(), game_state->players()->Get(i)->rat_type(), game_state->players()->Get(i)->frame(), game_state->players()->Get(i)->rotation());
-                        players_server.back().message = flatbuffers::GetString(game_state->players()->Get(i)->message());
-                    }
-                    temp_players = players_show;
-                    players_show = players_server;
-                    for (int i = 0; i < temp_players.size(); i++)
-                    {
-                        if (players_show[i].id == temp_players[i].id)
-                        {
-                            players_show[i].x = temp_players[i].x;
-                            players_show[i].y = temp_players[i].y;
-                        }
-                    }
-
-                    cards_on_ground.clear();
-                    for (int i = 0; i < game_state->cards_on_ground()->size(); i++)
-                    {
-                        cards_on_ground.emplace_back(game_state->cards_on_ground()->Get(i)->value(), game_state->cards_on_ground()->Get(i)->x(), game_state->cards_on_ground()->Get(i)->y(), game_state->cards_on_ground()->Get(i)->owner_id());
-                    }
-
+                    getGameStateInfo(event.packet->data);
                     enet_packet_destroy(event.packet);
                     break;
             }
@@ -147,13 +123,43 @@ struct Client
         render();
     }
 
+    void getGameStateInfo(const void* buf)
+    {
+        auto game_state = GS::GetGameState(event.packet->data);
+        
+        players_server.clear();
+        for (int i = 0; i < game_state->players()->size(); i++)
+        {
+            auto player = game_state->players()->Get(i);
+            players_server.emplace_back(player->id(), player->x(), player->y(), player->rat_type(), player->frame(), player->rotation());
+            players_server.back().message = flatbuffers::GetString(player->message());
+        }
+        temp_players = players_show;
+        players_show = players_server;
+        for (int i = 0; i < temp_players.size(); i++)
+        {
+            if (players_show[i].id == temp_players[i].id)
+            {
+                players_show[i].x = temp_players[i].x;
+                players_show[i].y = temp_players[i].y;
+            }
+        }
+
+        cards_on_ground.clear();
+        for (int i = 0; i < game_state->cards_on_ground()->size(); i++)
+        {
+            auto card = game_state->cards_on_ground()->Get(i);
+            cards_on_ground.emplace_back(card->unique_id(), card->value(), card->x(), card->y());
+        }
+    }
+
     void getMessageSend()
     {
         if (rl::IsKeyPressed(rl::KEY_ENTER) && isTypingMessage)
         {
             message = typeMessage;
             fb_builder.Clear();
-            fb_builder.Finish(GS::CreatePlayer(fb_builder, _id, _x, _y, _ratType, ratSheet.currentFrame, int(_rotation), fb_builder.CreateString(message)));
+            fb_builder.Finish(GS::CreatePlayer(fb_builder, FLAG_PLAYER_DATA, _id, _x, _y, _ratType, ratSheet.currentFrame, int(_rotation), fb_builder.CreateString(message)));
             enet_peer_send(host, 0, enet_packet_create(fb_builder.GetBufferPointer(), fb_builder.GetSize()+1, 0));
             typeMessage.clear();
         }
@@ -214,13 +220,12 @@ struct Client
 
         _x += _speed_x * dt;
         _y += _speed_y * dt;
-
         send_time += dt;
         if ((send_time >= 1.f/send_fps && _pressed == true) || send_now)
         {
             send_time = 0;
             fb_builder.Clear();
-            fb_builder.Finish(GS::CreatePlayer(fb_builder, _id, _x, _y, _ratType, ratSheet.currentFrame, int(_rotation)));
+            fb_builder.Finish(GS::CreatePlayer(fb_builder, FLAG_PLAYER_DATA, _id, _x, _y, _ratType, ratSheet.currentFrame, int(_rotation)));
             enet_peer_send(host, 0, enet_packet_create(fb_builder.GetBufferPointer(), fb_builder.GetSize(), 0));
         }
 
@@ -234,8 +239,25 @@ struct Client
     {
         if (isTypingMessage)
             return;
-        if (rl::IsKeyDown(rl::KEY_SPACE))
+        if (rl::IsKeyDown(rl::KEY_LEFT_SHIFT))
         {
+            if (rl::IsKeyPressed(rl::KEY_SPACE))
+            {
+                Log("remove");
+                for (int i = 0; i < cards_on_ground.size(); i++)
+                {
+                    if (rl::CheckCollisionRecs({_x-4*SPRITE_SCALE, _y-4*SPRITE_SCALE, (float)ratSheet.frameWidth+2*SPRITE_SCALE, (float)ratSheet.frameHeight+2*SPRITE_SCALE}, {(float)cards_on_ground[i].x, (float)cards_on_ground[i].y, card_dims.x, card_dims.y}))
+                    {
+                        Log("removecollide");
+                        fb_builder.Clear();
+                        auto card = GS::CreatePlayingCard(fb_builder, FLAG_PLAYINGCARD_DATA, FLAG_PLAYINGCARD_REMOVE, cards_on_ground[i].unique_id);
+                        fb_builder.Finish(card);
+                        enet_peer_send(host, 0, enet_packet_create(fb_builder.GetBufferPointer(), fb_builder.GetSize(), 0));
+                        break;
+                    }
+                }
+            }
+
             int temp_value = -1;
 
             if (rl::IsKeyPressed(rl::KEY_ONE))
@@ -260,11 +282,10 @@ struct Client
             if (temp_value == -1)
                 return;
             
-            Log("card place!");
-            cards_on_ground.emplace_back(temp_value, _x, _y, _id);
+            cards_id_increment += 1;
+            cards_on_ground.emplace_back(rand()%999999, temp_value, _x - card_dims.x/2, _y - card_dims.y/2);
             fb_builder.Clear();
-            auto card = GS::CreatePlayingCard(fb_builder, cards_on_ground.back().value, cards_on_ground.back().x - card_dims.x/2, cards_on_ground.back().y  - card_dims.y/2, cards_on_ground.back().owner_id);
-            fb_builder.Finish(GS::CreatePlayer(fb_builder, _id, _x, _y, _ratType, ratSheet.currentFrame, int(_rotation), 0, card));
+            fb_builder.Finish(GS::CreatePlayingCard(fb_builder, FLAG_PLAYINGCARD_DATA, FLAG_PLAYINGCARD_ADD, cards_on_ground.back().unique_id, cards_on_ground.back().value, cards_on_ground.back().x, cards_on_ground.back().y));
             enet_peer_send(host, 0, enet_packet_create(fb_builder.GetBufferPointer(), fb_builder.GetSize(), 0));
         }
     }
@@ -327,9 +348,10 @@ struct Client
             rl::ClearBackground(colorBg);
             fixDrawBackground();
 
+            // cards
             for (int i = 0; i < cards_on_ground.size(); i++)
             {
-                rl::DrawRectangle(cards_on_ground[i].x - _camera_x, cards_on_ground[i].y - _camera_y, 40, 70, {255,255,255,255});
+                rl::DrawRectangle(cards_on_ground[i].x - _camera_x, cards_on_ground[i].y - _camera_y, card_dims.x, card_dims.y, {255,255,255,255});
                 rl::DrawTextPro(font2, std::to_string(cards_on_ground[i].value).c_str(), {(float)cards_on_ground[i].x - _camera_x + 5, (float)cards_on_ground[i].y - _camera_y - 15}, {0,0}, 0, 100, 0, {0,0,0,255});
             }
 

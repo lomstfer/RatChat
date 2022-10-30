@@ -45,7 +45,6 @@ struct Server
     
     void update()
     {
-        Log("----");
         if (enet_host_service(host, &event, 1000) > 0)
         {
             switch (event.type)
@@ -54,13 +53,12 @@ struct Server
                 Lognl("connected:");
                 Log("\tid: " + std::to_string(event.peer->incomingPeerID));
                 Log("\taddress: " + std::to_string(event.peer->address.host));
-
-                // to do: multiple different packets - for optimization
                 addClient(event.peer->incomingPeerID);
                 broadcastState();
                 break;
 
             case ENET_EVENT_TYPE_RECEIVE:
+                // to do: multiple different packets - for optimization and usability
                 getClientInfo(event.packet->data);
                 broadcastState();
                 enet_packet_destroy(event.packet);
@@ -97,48 +95,69 @@ struct Server
 
     void getClientInfo(const void* buf)
     {
-        auto pData = flatbuffers::GetRoot<GS::Player>(buf);
-        for (int i = 0; i < players_server.size(); i++)
+        auto packetTypeHolder = flatbuffers::GetRoot<GS::PacketTypeHolder>(buf);
+
+        Log(packetTypeHolder->packet_type());
+
+        if (packetTypeHolder->packet_type() == FLAG_PLAYER_DATA)
         {
-            if (players_server[i].id == pData->id())
+            auto pData = flatbuffers::GetRoot<GS::Player>(buf);
+        
+            for (int i = 0; i < players_server.size(); i++)
             {
-                players_server[i].x = pData->x();
-                players_server[i].y = pData->y();
-                players_server[i].rat_type = pData->rat_type();
-                players_server[i].frame = pData->frame();
-                players_server[i].rotation = pData->rotation();
-                if (flatbuffers::GetString(pData->message()).length() > 0)
+                if (players_server[i].id == pData->id())
                 {
-                    players_server[i].message = flatbuffers::GetString(pData->message());
+                    players_server[i].x = pData->x();
+                    players_server[i].y = pData->y();
+                    players_server[i].rat_type = pData->rat_type();
+                    players_server[i].frame = pData->frame();
+                    players_server[i].rotation = pData->rotation();
+                    if (flatbuffers::GetString(pData->message()).length() > 0)
+                    {
+                        players_server[i].message = flatbuffers::GetString(pData->message());
+                    }
+                        
                 }
-                    
             }
         }
-        if (pData->placed_card() != 0)
+        
+        if (packetTypeHolder->packet_type() == FLAG_PLAYINGCARD_DATA)
         {
-            getCardInfo(event.packet->data);
-        }
-    }
+            auto pcData = flatbuffers::GetRoot<GS::PlayingCard>(buf);
 
-    void getCardInfo(const void* buf)
-    {
-        auto cardData = flatbuffers::GetRoot<GS::Player>(buf)->placed_card();
-        cards_on_ground.emplace_back(cardData->value(), cardData->x(), cardData->y(), cardData->owner_id());
+            if (pcData->command() == FLAG_PLAYINGCARD_ADD)
+                cards_on_ground.emplace_back(pcData->unique_id(), pcData->value(), pcData->x(), pcData->y());
+
+            if (pcData->command() == FLAG_PLAYINGCARD_REMOVE)
+            {
+                for (int i = 0; i < cards_on_ground.size(); i++)
+                {
+                    if (cards_on_ground[i].unique_id == pcData->unique_id())
+                    {
+                        cards_on_ground.erase(cards_on_ground.begin() + i);
+                        i -= 1;
+                    }
+                }
+            }
+        }
     }
 
     void broadcastState()
     {
         fb_builder.Clear();
+
         players_vector.clear();
         for (int i = 0; i < players_server.size(); i++)
         {
-            players_vector.push_back(GS::CreatePlayer(fb_builder, players_server[i].id, players_server[i].x, players_server[i].y, players_server[i].rat_type, players_server[i].frame, players_server[i].rotation, fb_builder.CreateString(players_server[i].message)));
+            players_vector.push_back(GS::CreatePlayer(fb_builder, FLAG_PLAYER_DATA, players_server[i].id, players_server[i].x, players_server[i].y, players_server[i].rat_type, players_server[i].frame, players_server[i].rotation, fb_builder.CreateString(players_server[i].message)));
         }
+
         cards_on_ground_vector.clear();
         for (int i = 0; i < cards_on_ground.size(); i++)
         {
-            cards_on_ground_vector.push_back(GS::CreatePlayingCard(fb_builder, cards_on_ground[i].value, cards_on_ground[i].x, cards_on_ground[i].y, cards_on_ground[i].owner_id));
+            cards_on_ground_vector.push_back(GS::CreatePlayingCard(fb_builder, FLAG_PLAYINGCARD_DATA, FLAG_PLAYINGCARD_ADD, cards_on_ground[i].unique_id, cards_on_ground[i].value, cards_on_ground[i].x, cards_on_ground[i].y));
         }
+
         auto game_state = GS::CreateGameState(fb_builder, fb_builder.CreateVector(players_vector), fb_builder.CreateVector(cards_on_ground_vector));
         fb_builder.Finish(game_state);
         enet_host_broadcast(host, 0, enet_packet_create(fb_builder.GetBufferPointer(), fb_builder.GetSize(), 0));

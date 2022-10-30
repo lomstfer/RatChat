@@ -24,6 +24,9 @@ struct PlayerBuilder;
 struct PlayingCard;
 struct PlayingCardBuilder;
 
+struct PacketTypeHolder;
+struct PacketTypeHolderBuilder;
+
 struct GameState FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef GameStateBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
@@ -94,15 +97,18 @@ inline flatbuffers::Offset<GameState> CreateGameStateDirect(
 struct Player FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef PlayerBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_ID = 4,
-    VT_X = 6,
-    VT_Y = 8,
-    VT_RAT_TYPE = 10,
-    VT_FRAME = 12,
-    VT_ROTATION = 14,
-    VT_MESSAGE = 16,
-    VT_PLACED_CARD = 18
+    VT_PACKET_TYPE = 4,
+    VT_ID = 6,
+    VT_X = 8,
+    VT_Y = 10,
+    VT_RAT_TYPE = 12,
+    VT_FRAME = 14,
+    VT_ROTATION = 16,
+    VT_MESSAGE = 18
   };
+  int32_t packet_type() const {
+    return GetField<int32_t>(VT_PACKET_TYPE, 0);
+  }
   int32_t id() const {
     return GetField<int32_t>(VT_ID, 0);
   }
@@ -124,11 +130,9 @@ struct Player FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const flatbuffers::String *message() const {
     return GetPointer<const flatbuffers::String *>(VT_MESSAGE);
   }
-  const GS::PlayingCard *placed_card() const {
-    return GetPointer<const GS::PlayingCard *>(VT_PLACED_CARD);
-  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_PACKET_TYPE, 4) &&
            VerifyField<int32_t>(verifier, VT_ID, 4) &&
            VerifyField<int32_t>(verifier, VT_X, 4) &&
            VerifyField<int32_t>(verifier, VT_Y, 4) &&
@@ -137,8 +141,6 @@ struct Player FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyField<int32_t>(verifier, VT_ROTATION, 4) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
            verifier.VerifyString(message()) &&
-           VerifyOffset(verifier, VT_PLACED_CARD) &&
-           verifier.VerifyTable(placed_card()) &&
            verifier.EndTable();
   }
 };
@@ -147,6 +149,9 @@ struct PlayerBuilder {
   typedef Player Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
+  void add_packet_type(int32_t packet_type) {
+    fbb_.AddElement<int32_t>(Player::VT_PACKET_TYPE, packet_type, 0);
+  }
   void add_id(int32_t id) {
     fbb_.AddElement<int32_t>(Player::VT_ID, id, 0);
   }
@@ -168,9 +173,6 @@ struct PlayerBuilder {
   void add_message(flatbuffers::Offset<flatbuffers::String> message) {
     fbb_.AddOffset(Player::VT_MESSAGE, message);
   }
-  void add_placed_card(flatbuffers::Offset<GS::PlayingCard> placed_card) {
-    fbb_.AddOffset(Player::VT_PLACED_CARD, placed_card);
-  }
   explicit PlayerBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -184,16 +186,15 @@ struct PlayerBuilder {
 
 inline flatbuffers::Offset<Player> CreatePlayer(
     flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t packet_type = 0,
     int32_t id = 0,
     int32_t x = 0,
     int32_t y = 0,
     int32_t rat_type = 0,
     int32_t frame = 0,
     int32_t rotation = 0,
-    flatbuffers::Offset<flatbuffers::String> message = 0,
-    flatbuffers::Offset<GS::PlayingCard> placed_card = 0) {
+    flatbuffers::Offset<flatbuffers::String> message = 0) {
   PlayerBuilder builder_(_fbb);
-  builder_.add_placed_card(placed_card);
   builder_.add_message(message);
   builder_.add_rotation(rotation);
   builder_.add_frame(frame);
@@ -201,40 +202,52 @@ inline flatbuffers::Offset<Player> CreatePlayer(
   builder_.add_y(y);
   builder_.add_x(x);
   builder_.add_id(id);
+  builder_.add_packet_type(packet_type);
   return builder_.Finish();
 }
 
 inline flatbuffers::Offset<Player> CreatePlayerDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t packet_type = 0,
     int32_t id = 0,
     int32_t x = 0,
     int32_t y = 0,
     int32_t rat_type = 0,
     int32_t frame = 0,
     int32_t rotation = 0,
-    const char *message = nullptr,
-    flatbuffers::Offset<GS::PlayingCard> placed_card = 0) {
+    const char *message = nullptr) {
   auto message__ = message ? _fbb.CreateString(message) : 0;
   return GS::CreatePlayer(
       _fbb,
+      packet_type,
       id,
       x,
       y,
       rat_type,
       frame,
       rotation,
-      message__,
-      placed_card);
+      message__);
 }
 
 struct PlayingCard FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef PlayingCardBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_VALUE = 4,
-    VT_X = 6,
-    VT_Y = 8,
-    VT_OWNER_ID = 10
+    VT_PACKET_TYPE = 4,
+    VT_COMMAND = 6,
+    VT_UNIQUE_ID = 8,
+    VT_VALUE = 10,
+    VT_X = 12,
+    VT_Y = 14
   };
+  int32_t packet_type() const {
+    return GetField<int32_t>(VT_PACKET_TYPE, 0);
+  }
+  int32_t command() const {
+    return GetField<int32_t>(VT_COMMAND, 0);
+  }
+  int32_t unique_id() const {
+    return GetField<int32_t>(VT_UNIQUE_ID, 0);
+  }
   int32_t value() const {
     return GetField<int32_t>(VT_VALUE, 0);
   }
@@ -244,15 +257,14 @@ struct PlayingCard FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   int32_t y() const {
     return GetField<int32_t>(VT_Y, 0);
   }
-  int32_t owner_id() const {
-    return GetField<int32_t>(VT_OWNER_ID, 0);
-  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_PACKET_TYPE, 4) &&
+           VerifyField<int32_t>(verifier, VT_COMMAND, 4) &&
+           VerifyField<int32_t>(verifier, VT_UNIQUE_ID, 4) &&
            VerifyField<int32_t>(verifier, VT_VALUE, 4) &&
            VerifyField<int32_t>(verifier, VT_X, 4) &&
            VerifyField<int32_t>(verifier, VT_Y, 4) &&
-           VerifyField<int32_t>(verifier, VT_OWNER_ID, 4) &&
            verifier.EndTable();
   }
 };
@@ -261,6 +273,15 @@ struct PlayingCardBuilder {
   typedef PlayingCard Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
+  void add_packet_type(int32_t packet_type) {
+    fbb_.AddElement<int32_t>(PlayingCard::VT_PACKET_TYPE, packet_type, 0);
+  }
+  void add_command(int32_t command) {
+    fbb_.AddElement<int32_t>(PlayingCard::VT_COMMAND, command, 0);
+  }
+  void add_unique_id(int32_t unique_id) {
+    fbb_.AddElement<int32_t>(PlayingCard::VT_UNIQUE_ID, unique_id, 0);
+  }
   void add_value(int32_t value) {
     fbb_.AddElement<int32_t>(PlayingCard::VT_VALUE, value, 0);
   }
@@ -269,9 +290,6 @@ struct PlayingCardBuilder {
   }
   void add_y(int32_t y) {
     fbb_.AddElement<int32_t>(PlayingCard::VT_Y, y, 0);
-  }
-  void add_owner_id(int32_t owner_id) {
-    fbb_.AddElement<int32_t>(PlayingCard::VT_OWNER_ID, owner_id, 0);
   }
   explicit PlayingCardBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -286,15 +304,60 @@ struct PlayingCardBuilder {
 
 inline flatbuffers::Offset<PlayingCard> CreatePlayingCard(
     flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t packet_type = 0,
+    int32_t command = 0,
+    int32_t unique_id = 0,
     int32_t value = 0,
     int32_t x = 0,
-    int32_t y = 0,
-    int32_t owner_id = 0) {
+    int32_t y = 0) {
   PlayingCardBuilder builder_(_fbb);
-  builder_.add_owner_id(owner_id);
   builder_.add_y(y);
   builder_.add_x(x);
   builder_.add_value(value);
+  builder_.add_unique_id(unique_id);
+  builder_.add_command(command);
+  builder_.add_packet_type(packet_type);
+  return builder_.Finish();
+}
+
+struct PacketTypeHolder FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef PacketTypeHolderBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_PACKET_TYPE = 4
+  };
+  int32_t packet_type() const {
+    return GetField<int32_t>(VT_PACKET_TYPE, 0);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<int32_t>(verifier, VT_PACKET_TYPE, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct PacketTypeHolderBuilder {
+  typedef PacketTypeHolder Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_packet_type(int32_t packet_type) {
+    fbb_.AddElement<int32_t>(PacketTypeHolder::VT_PACKET_TYPE, packet_type, 0);
+  }
+  explicit PacketTypeHolderBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<PacketTypeHolder> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<PacketTypeHolder>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<PacketTypeHolder> CreatePacketTypeHolder(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    int32_t packet_type = 0) {
+  PacketTypeHolderBuilder builder_(_fbb);
+  builder_.add_packet_type(packet_type);
   return builder_.Finish();
 }
 

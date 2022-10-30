@@ -6,6 +6,7 @@ table GameState {
 }
 
 table Player {
+    packet_type:int;
     id:int;
     x:int;
     y:int;
@@ -13,15 +14,19 @@ table Player {
     frame:int;
     rotation:int;
     message:string;
-    
-    placed_card:PlayingCard;
 }
 
 table PlayingCard {
+    packet_type:int;
+    command:int;
+    unique_id:int;
     value:int;
     x:int;
     y:int;
-    owner_id:int;
+}
+
+table PacketTypeHolder {
+    packet_type:int;
 }
 
 root_type GameState;
