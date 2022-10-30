@@ -1,6 +1,7 @@
 #include "Textures.hpp"
 
 rl::Texture2D TEX_DESERT;
+
 rl::Texture2D TEX_SS_RAT;
 rl::Texture2D TEX_SS_RAT0;
 rl::Texture2D TEX_SS_RAT1;
@@ -10,6 +11,9 @@ rl::Texture2D TEX_SS_RAT4;
 rl::Texture2D TEX_SS_RAT5;
 rl::Texture2D TEX_SS_RATDREAM;
 rl::Texture2D TEX_RATS[7];
+
+rl::Texture2D TEX_CARDS[14];
+rl::Texture2D TEX_CARDS_SHEET;
 
 void loadTextures() {
     TEX_DESERT = rl::LoadTexture("assets/desert.png");
@@ -27,4 +31,6 @@ void loadTextures() {
     TEX_RATS[4] = TEX_SS_RAT4;
     TEX_RATS[5] = TEX_SS_RAT5;
     TEX_RATS[6] = TEX_SS_RATDREAM;
+
+    TEX_CARDS_SHEET = rl::LoadTexture("assets/card_deck.png");
 }

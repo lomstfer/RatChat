@@ -67,8 +67,8 @@ struct Client
 
     std::vector<PlayingCard> cards_on_ground;
     std::vector<PlayingCard> cards_on_hand;
-    rl::Vector2 card_dims = {10 * SPRITE_SCALE, 14 * SPRITE_SCALE};
-    rl::Vector2 card_dims_hand = {15 * SPRITE_SCALE, 21 * SPRITE_SCALE};
+    rl::Vector2 card_dims = {33 * SPRITE_SCALE, 45 * SPRITE_SCALE};
+    rl::Vector2 card_dims_hand = {card_dims.x * 1.5f, card_dims.y * 1.5f};
     float cards_on_hand_space = card_dims_hand.x + card_dims.x/2.0;
     int cards_id_increment = 0;
     PlayingCard card_moving;
@@ -384,6 +384,16 @@ struct Client
         }
     }
 
+    void drawCard(rl::Vector2 position, int value, float size_multiplier)
+    {
+        value -= 1;
+        rl::DrawTexturePro(
+            TEX_CARDS_SHEET, 
+            {value * (card_dims.x/SPRITE_SCALE + 2), 0, card_dims.x/SPRITE_SCALE, card_dims.y/SPRITE_SCALE}, 
+            {position.x, position.y, card_dims.x*size_multiplier, card_dims.y*size_multiplier}, 
+            {0,0}, 0, {255,255,255,255});
+    }
+
     void render()
     {
         rl::BeginDrawing();
@@ -393,9 +403,7 @@ struct Client
             // cards on ground
             for (int i = 0; i < cards_on_ground.size(); i++)
             {
-                rl::DrawRectangle(cards_on_ground[i].x - _camera_x, cards_on_ground[i].y - _camera_y, card_dims.x, card_dims.y, {255,255,255,255});
-                rl::DrawTextPro(font2, std::to_string(cards_on_ground[i].value).c_str(), {(float)cards_on_ground[i].x - _camera_x + 5, (float)cards_on_ground[i].y - _camera_y - 15}, {0,0}, 0, 100, 0, {0,0,0,255});
-                rl::DrawTextPro(font2, std::to_string(cards_on_ground[i].value).c_str(), {(float)cards_on_ground[i].x - _camera_x + 5, (float)cards_on_ground[i].y - _camera_y - 7}, {0,0}, 0, 40, 0, {0,0,0,255});
+                drawCard({(float)cards_on_ground[i].x - _camera_x, (float)cards_on_ground[i].y - _camera_y}, cards_on_ground[i].value, 1);
             }
 
             // draw players
@@ -426,14 +434,12 @@ struct Client
                 }
                 cards_on_hand[i].x = WINW/2 - total_width/2 + cards_on_hand_space*i;
                 cards_on_hand[i].y = WINH - card_dims.y - 50;
-                rl::DrawRectangle(cards_on_hand[i].x, cards_on_hand[i].y, card_dims_hand.x, card_dims_hand.y, {255,255,255,255});
-                rl::DrawTextPro(font2, std::to_string(cards_on_hand[i].value).c_str(), {(float)cards_on_hand[i].x + 5, (float)cards_on_hand[i].y - 15}, {0,0}, 0, 100*1.5, 0, {0,0,0,255});
+                drawCard({(float)cards_on_hand[i].x, (float)cards_on_hand[i].y}, cards_on_hand[i].value, 1.5f);
             }
 
             if (moving_card)
             {
-                rl::DrawRectangle(rl::GetMousePosition().x - card_dims_hand.x/2, rl::GetMousePosition().y - card_dims_hand.y/2, card_dims_hand.x, card_dims_hand.y, {255,255,255,255});
-                rl::DrawTextPro(font2, std::to_string(card_moving.value).c_str(), {(float)rl::GetMousePosition().x + 5 - card_dims_hand.x/2, (float)rl::GetMousePosition().y - 15 - card_dims_hand.y/2}, {0,0}, 0, 100*1.5, 0, {0,0,0,255});
+                drawCard({rl::GetMousePosition().x - card_dims_hand.x/2, rl::GetMousePosition().y - card_dims_hand.y/2}, card_moving.value, 1.3f);
             }
 
             std::string coordsText = std::to_string(ftint(_x/10.f)) + "; " + std::to_string(ftint(-_y/10.f));

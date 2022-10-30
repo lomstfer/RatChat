@@ -16,6 +16,10 @@ extern rl::Texture2D TEX_SS_RAT4;
 extern rl::Texture2D TEX_SS_RAT5;
 extern rl::Texture2D TEX_SS_RATDREAM;
 extern rl::Texture2D TEX_RATS[7];
+
+extern rl::Texture2D TEX_CARDS_SHEET;
+extern rl::Texture2D TEX_CARDS[14];
+
 void loadTextures();
 
 #endif
