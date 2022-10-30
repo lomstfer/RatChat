@@ -32,5 +32,6 @@ void loadTextures() {
     TEX_RATS[5] = TEX_SS_RAT5;
     TEX_RATS[6] = TEX_SS_RATDREAM;
 
+    //TEX_CARDS_SHEET = rl::LoadTexture("assets/card_deck.png");
     TEX_CARDS_SHEET = rl::LoadTexture("assets/card_deck.png");
 }

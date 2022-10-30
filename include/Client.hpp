@@ -67,9 +67,9 @@ struct Client
 
     std::vector<PlayingCard> cards_on_ground;
     std::vector<PlayingCard> cards_on_hand;
-    rl::Vector2 card_dims = {33 * SPRITE_SCALE, 45 * SPRITE_SCALE};
+    rl::Vector2 card_dims = {25 * SPRITE_SCALE, 35 * SPRITE_SCALE};
     rl::Vector2 card_dims_hand = {card_dims.x * 1.5f, card_dims.y * 1.5f};
-    float cards_on_hand_space = card_dims_hand.x + card_dims.x/2.0;
+    float cards_on_hand_space = card_dims_hand.x/1.5f;
     int cards_id_increment = 0;
     PlayingCard card_moving;
     bool moving_card = false;
@@ -309,7 +309,6 @@ struct Client
             {
                 if (rl::CheckCollisionPointRec(rl::GetMousePosition(), {(float)cards_on_hand[i].x, (float)cards_on_hand[i].y, card_dims_hand.x, card_dims_hand.y}))
                 {
-                    Log("pressed the card");
                     card_moving = cards_on_hand[i];
                     moving_card = true;
                 }
@@ -386,10 +385,9 @@ struct Client
 
     void drawCard(rl::Vector2 position, int value, float size_multiplier)
     {
-        value -= 1;
         rl::DrawTexturePro(
             TEX_CARDS_SHEET, 
-            {value * (card_dims.x/SPRITE_SCALE + 2), 0, card_dims.x/SPRITE_SCALE, card_dims.y/SPRITE_SCALE}, 
+            {value * (card_dims.x/SPRITE_SCALE), 0, card_dims.x/SPRITE_SCALE, card_dims.y/SPRITE_SCALE}, 
             {position.x, position.y, card_dims.x*size_multiplier, card_dims.y*size_multiplier}, 
             {0,0}, 0, {255,255,255,255});
     }
@@ -424,9 +422,16 @@ struct Client
             // ------------
 
             // cards on hand
+            int hover_card = -1;
             for (int i = 0; i < cards_on_hand.size(); i++)
             {
-                float total_width = cards_on_hand.size() * cards_on_hand_space;
+                if (rl::CheckCollisionPointRec(rl::GetMousePosition(), {(float)cards_on_hand[i].x, (float)cards_on_hand[i].y, card_dims_hand.x, card_dims_hand.y}) && hover_card == -1)
+                {
+                    hover_card = i;
+                    continue;
+                }
+
+                float total_width = cards_on_hand.size() * cards_on_hand_space + card_dims_hand.x/2.f;
                 if (total_width >= WINW)
                 {
                     cards_on_hand_space *= 0.99;
@@ -436,6 +441,8 @@ struct Client
                 cards_on_hand[i].y = WINH - card_dims.y - 50;
                 drawCard({(float)cards_on_hand[i].x, (float)cards_on_hand[i].y}, cards_on_hand[i].value, 1.5f);
             }
+            if (hover_card != -1)
+                drawCard({(float)cards_on_hand[hover_card].x, (float)cards_on_hand[hover_card].y - 10*SPRITE_SCALE}, cards_on_hand[hover_card].value, 1.5f);
 
             if (moving_card)
             {
