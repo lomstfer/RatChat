@@ -237,7 +237,8 @@ struct PlayingCard FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_UNIQUE_ID = 8,
     VT_VALUE = 10,
     VT_X = 12,
-    VT_Y = 14
+    VT_Y = 14,
+    VT_FLIPPED = 16
   };
   int32_t packet_type() const {
     return GetField<int32_t>(VT_PACKET_TYPE, 0);
@@ -257,6 +258,9 @@ struct PlayingCard FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   int32_t y() const {
     return GetField<int32_t>(VT_Y, 0);
   }
+  bool flipped() const {
+    return GetField<uint8_t>(VT_FLIPPED, 0) != 0;
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<int32_t>(verifier, VT_PACKET_TYPE, 4) &&
@@ -265,6 +269,7 @@ struct PlayingCard FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyField<int32_t>(verifier, VT_VALUE, 4) &&
            VerifyField<int32_t>(verifier, VT_X, 4) &&
            VerifyField<int32_t>(verifier, VT_Y, 4) &&
+           VerifyField<uint8_t>(verifier, VT_FLIPPED, 1) &&
            verifier.EndTable();
   }
 };
@@ -291,6 +296,9 @@ struct PlayingCardBuilder {
   void add_y(int32_t y) {
     fbb_.AddElement<int32_t>(PlayingCard::VT_Y, y, 0);
   }
+  void add_flipped(bool flipped) {
+    fbb_.AddElement<uint8_t>(PlayingCard::VT_FLIPPED, static_cast<uint8_t>(flipped), 0);
+  }
   explicit PlayingCardBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -309,7 +317,8 @@ inline flatbuffers::Offset<PlayingCard> CreatePlayingCard(
     int32_t unique_id = 0,
     int32_t value = 0,
     int32_t x = 0,
-    int32_t y = 0) {
+    int32_t y = 0,
+    bool flipped = false) {
   PlayingCardBuilder builder_(_fbb);
   builder_.add_y(y);
   builder_.add_x(x);
@@ -317,6 +326,7 @@ inline flatbuffers::Offset<PlayingCard> CreatePlayingCard(
   builder_.add_unique_id(unique_id);
   builder_.add_command(command);
   builder_.add_packet_type(packet_type);
+  builder_.add_flipped(flipped);
   return builder_.Finish();
 }
 

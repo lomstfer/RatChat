@@ -31,12 +31,13 @@ class PlayingCard
 {
 public:
     PlayingCard() = default; 
-    PlayingCard(int unique_id, int value, int x, int y)
-    : unique_id(unique_id), value(value), x(x), y(y) {}
+    PlayingCard(int unique_id, int value, int x, int y, bool flipped)
+    : unique_id(unique_id), value(value), x(x), y(y), flipped(flipped) {}
     int unique_id;
     int value;
     int x;
     int y;
+    bool flipped;
 };
 
 enum packetTypes
@@ -45,6 +46,7 @@ enum packetTypes
     FLAG_PLAYINGCARD_DATA,
     FLAG_PLAYINGCARD_ADD,
     FLAG_PLAYINGCARD_REMOVE,
+    FLAG_PLAYINGCARD_UPDATE,
 };
 
 unsigned char randChar(int lower, int higher)

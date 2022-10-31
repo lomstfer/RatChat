@@ -69,6 +69,8 @@ struct Client
     std::vector<PlayingCard> cards_on_hand;
     rl::Vector2 card_dims = {25 * SPRITE_SCALE, 35 * SPRITE_SCALE};
     rl::Vector2 card_dims_hand = {card_dims.x * 1.5f, card_dims.y * 1.5f};
+    rl::Vector2 card_dims_hover = {card_dims.x * 1.7f, card_dims.y * 1.7f};
+    rl::Vector2 card_dims_drag = {card_dims.x * 1.3f, card_dims.y * 1.3f};
     float cards_on_hand_space = card_dims_hand.x/1.5f;
     int cards_id_increment = 0;
     PlayingCard card_moving;
@@ -156,7 +158,7 @@ struct Client
         for (int i = 0; i < game_state->cards_on_ground()->size(); i++)
         {
             auto card = game_state->cards_on_ground()->Get(i);
-            cards_on_ground.emplace_back(card->unique_id(), card->value(), card->x(), card->y());
+            cards_on_ground.emplace_back(card->unique_id(), card->value(), card->x(), card->y(), card->flipped());
         }
     }
 
@@ -244,9 +246,9 @@ struct Client
 
     void addCardSend(const PlayingCard& card)
     {
-        cards_on_ground.emplace_back(rand()%999999, card.value, card.x, card.y);
+        cards_on_ground.emplace_back(rand()%999999, card.value, card.x, card.y, card.flipped);
         fb_builder.Clear();
-        fb_builder.Finish(GS::CreatePlayingCard(fb_builder, FLAG_PLAYINGCARD_DATA, FLAG_PLAYINGCARD_ADD, cards_on_ground.back().unique_id, cards_on_ground.back().value, cards_on_ground.back().x, cards_on_ground.back().y));
+        fb_builder.Finish(GS::CreatePlayingCard(fb_builder, FLAG_PLAYINGCARD_DATA, FLAG_PLAYINGCARD_ADD, cards_on_ground.back().unique_id, cards_on_ground.back().value, cards_on_ground.back().x, cards_on_ground.back().y, cards_on_ground.back().flipped));
         enet_peer_send(host, 0, enet_packet_create(fb_builder.GetBufferPointer(), fb_builder.GetSize(), 0));
     }
 
@@ -294,7 +296,21 @@ struct Client
                 temp_value = 9;
 
             if (temp_value != -1)
-                addCardSend(PlayingCard(rand()%999999, temp_value, _x - card_dims.x/2, _y - card_dims.y/2));
+                addCardSend(PlayingCard(rand()%999999, temp_value, _x - card_dims.x/2, _y - card_dims.y/2, false));
+        }
+        else if (rl::IsKeyPressed(rl::KEY_SPACE))
+        {
+            for (int i = cards_on_ground.size() - 1; i >= 0; i--)
+            {
+                if (rl::CheckCollisionRecs({_x-4*SPRITE_SCALE, _y-4*SPRITE_SCALE, (float)ratSheet.frameWidth+2*SPRITE_SCALE, (float)ratSheet.frameHeight+2*SPRITE_SCALE}, {(float)cards_on_ground[i].x, (float)cards_on_ground[i].y, card_dims.x, card_dims.y}))
+                {
+                    fb_builder.Clear();
+                    auto card = GS::CreatePlayingCard(fb_builder, FLAG_PLAYINGCARD_DATA, FLAG_PLAYINGCARD_UPDATE, cards_on_ground[i].unique_id, cards_on_ground[i].value, cards_on_ground[i].x, cards_on_ground[i].y, !cards_on_ground[i].flipped);
+                    fb_builder.Finish(card);
+                    enet_peer_send(host, 0, enet_packet_create(fb_builder.GetBufferPointer(), fb_builder.GetSize(), 0));
+                    break;
+                }
+            }
         }
     }
 
@@ -383,12 +399,21 @@ struct Client
         }
     }
 
-    void drawCard(rl::Vector2 position, int value, float size_multiplier)
+    void drawCard(const PlayingCard& card, float size_multiplier)
     {
         rl::DrawTexturePro(
             TEX_CARDS_SHEET, 
-            {value * (card_dims.x/SPRITE_SCALE), 0, card_dims.x/SPRITE_SCALE, card_dims.y/SPRITE_SCALE}, 
-            {position.x, position.y, card_dims.x*size_multiplier, card_dims.y*size_multiplier}, 
+            {card.flipped ? 0 : card.value * (card_dims.x/SPRITE_SCALE), 0, card_dims.x/SPRITE_SCALE, card_dims.y/SPRITE_SCALE}, 
+            {(float)card.x - _camera_x, (float)card.y - _camera_y, card_dims.x*size_multiplier, card_dims.y*size_multiplier}, 
+            {0,0}, 0, {255,255,255,255});
+    }
+
+    void drawCard(const PlayingCard& card, rl::Vector2 position, float size_multiplier)
+    {
+        rl::DrawTexturePro(
+            TEX_CARDS_SHEET, 
+            {card.flipped ? 0 : card.value * (card_dims.x/SPRITE_SCALE), 0, card_dims.x/SPRITE_SCALE, card_dims.y/SPRITE_SCALE}, 
+            {(float)position.x, (float)position.y, card_dims.x*size_multiplier, card_dims.y*size_multiplier}, 
             {0,0}, 0, {255,255,255,255});
     }
 
@@ -401,7 +426,7 @@ struct Client
             // cards on ground
             for (int i = 0; i < cards_on_ground.size(); i++)
             {
-                drawCard({(float)cards_on_ground[i].x - _camera_x, (float)cards_on_ground[i].y - _camera_y}, cards_on_ground[i].value, 1);
+                drawCard(cards_on_ground[i], 1);
             }
 
             // draw players
@@ -419,16 +444,18 @@ struct Client
                 drawSheetFrame(TEX_RATS[players_show[i].rat_type], players_show[i].frame, ratSheet.frameWidth, ratSheet.frameHeight, pDrawPos, players_show[i].rotation, ratSheet.scale, ratSheet.origin);
                 rl::DrawTextPro(font2, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 60}, {0,0}, 0, 30, 0, {255,255,255,255});
             }
-            // ------------
 
             // cards on hand
             int hover_card = -1;
-            for (int i = 0; i < cards_on_hand.size(); i++)
+            for (int i = cards_on_hand.size()-1; i >= 0; i--)
             {
-                if (rl::CheckCollisionPointRec(rl::GetMousePosition(), {(float)cards_on_hand[i].x, (float)cards_on_hand[i].y, card_dims_hand.x, card_dims_hand.y}) && hover_card == -1)
+                int render_card = cards_on_hand.size()-1-i;
+                if (rl::CheckCollisionPointRec(rl::GetMousePosition(), {(float)cards_on_hand[i].x, (float)cards_on_hand[i].y, card_dims_hand.x, card_dims_hand.y}))
                 {
-                    hover_card = i;
-                    continue;
+                    if (rl::IsKeyPressed(rl::KEY_SPACE))
+                        cards_on_hand[i].flipped = !cards_on_hand[i].flipped;
+                    if (hover_card == -1)
+                        hover_card = i;
                 }
 
                 float total_width = cards_on_hand.size() * cards_on_hand_space + card_dims_hand.x/2.f;
@@ -437,17 +464,15 @@ struct Client
                     cards_on_hand_space *= 0.99;
                     total_width = cards_on_hand.size() * cards_on_hand_space;
                 }
-                cards_on_hand[i].x = WINW/2 - total_width/2 + cards_on_hand_space*i;
-                cards_on_hand[i].y = WINH - card_dims.y - 50;
-                drawCard({(float)cards_on_hand[i].x, (float)cards_on_hand[i].y}, cards_on_hand[i].value, 1.5f);
+                cards_on_hand[render_card].x = WINW/2 - total_width/2 + cards_on_hand_space*render_card;
+                cards_on_hand[render_card].y = WINH - card_dims.y - 50;
+                drawCard(cards_on_hand[render_card], rl::Vector2{(float)cards_on_hand[render_card].x, (float)cards_on_hand[render_card].y}, 1.5f);
             }
             if (hover_card != -1)
-                drawCard({(float)cards_on_hand[hover_card].x, (float)cards_on_hand[hover_card].y - 10*SPRITE_SCALE}, cards_on_hand[hover_card].value, 1.5f);
+                drawCard(cards_on_hand[hover_card], rl::Vector2{(float)cards_on_hand[hover_card].x - (card_dims_hover.x-card_dims_hand.x)/2, (float)cards_on_hand[hover_card].y - (card_dims_hover.y-card_dims_hand.y)/2}, 1.7f);
 
             if (moving_card)
-            {
-                drawCard({rl::GetMousePosition().x - card_dims_hand.x/2, rl::GetMousePosition().y - card_dims_hand.y/2}, card_moving.value, 1.3f);
-            }
+                drawCard(card_moving, {rl::GetMousePosition().x - card_dims_drag.x/2, rl::GetMousePosition().y - card_dims_drag.y/2}, 1.3f);
 
             std::string coordsText = std::to_string(ftint(_x/10.f)) + "; " + std::to_string(ftint(-_y/10.f));
             rl::DrawTextPro(font, coordsText.c_str(), {0,0}, {0,0}, 0, 30, 0, {255,255,255,255});

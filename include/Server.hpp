@@ -125,11 +125,13 @@ struct Server
         {
             auto pcData = flatbuffers::GetRoot<GS::PlayingCard>(buf);
 
-            if (pcData->command() == FLAG_PLAYINGCARD_ADD)
-                cards_on_ground.emplace_back(pcData->unique_id(), pcData->value(), pcData->x(), pcData->y());
-
-            if (pcData->command() == FLAG_PLAYINGCARD_REMOVE)
+            switch (pcData->command())
             {
+            case FLAG_PLAYINGCARD_ADD:
+                cards_on_ground.emplace_back(pcData->unique_id(), pcData->value(), pcData->x(), pcData->y(), pcData->flipped());
+                break;
+
+            case FLAG_PLAYINGCARD_REMOVE:
                 for (int i = 0; i < cards_on_ground.size(); i++)
                 {
                     if (cards_on_ground[i].unique_id == pcData->unique_id())
@@ -138,6 +140,20 @@ struct Server
                         i -= 1;
                     }
                 }
+                break;
+
+            case FLAG_PLAYINGCARD_UPDATE:
+                for (int i = 0; i < cards_on_ground.size(); i++)
+                {
+                    if (cards_on_ground[i].unique_id == pcData->unique_id())
+                    {
+                        cards_on_ground[i] = PlayingCard(pcData->unique_id(), pcData->value(), pcData->x(), pcData->y(), pcData->flipped());
+                    }
+                }
+                break;
+            
+            default:
+                break;
             }
         }
     }
@@ -155,7 +171,7 @@ struct Server
         cards_on_ground_vector.clear();
         for (int i = 0; i < cards_on_ground.size(); i++)
         {
-            cards_on_ground_vector.push_back(GS::CreatePlayingCard(fb_builder, FLAG_PLAYINGCARD_DATA, FLAG_PLAYINGCARD_ADD, cards_on_ground[i].unique_id, cards_on_ground[i].value, cards_on_ground[i].x, cards_on_ground[i].y));
+            cards_on_ground_vector.push_back(GS::CreatePlayingCard(fb_builder, FLAG_PLAYINGCARD_DATA, FLAG_PLAYINGCARD_ADD, cards_on_ground[i].unique_id, cards_on_ground[i].value, cards_on_ground[i].x, cards_on_ground[i].y, cards_on_ground[i].flipped));
         }
 
         auto game_state = GS::CreateGameState(fb_builder, fb_builder.CreateVector(players_vector), fb_builder.CreateVector(cards_on_ground_vector));

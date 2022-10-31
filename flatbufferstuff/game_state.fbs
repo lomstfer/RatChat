@@ -23,6 +23,7 @@ table PlayingCard {
     value:int;
     x:int;
     y:int;
+    flipped:bool;
 }
 
 table PacketTypeHolder {
