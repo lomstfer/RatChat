@@ -97,8 +97,6 @@ struct Server
     {
         auto packetTypeHolder = flatbuffers::GetRoot<GS::PacketTypeHolder>(buf);
 
-        Log(packetTypeHolder->packet_type());
-
         if (packetTypeHolder->packet_type() == FLAG_PLAYER_DATA)
         {
             auto pData = flatbuffers::GetRoot<GS::Player>(buf);
