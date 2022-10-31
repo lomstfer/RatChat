@@ -2,10 +2,7 @@
 #define GLOBALS_HPP
 
 #include <string>
-#include <raylib.h>
 #include <iostream>
-#include "SpriteSheet.hpp"
-#include "Textures.hpp"
 
 #define Log(x) std::cout << x << std::endl
 #define Lognl(x) std::cout << std::endl << x << std::endl
@@ -73,12 +70,6 @@ int clamp(int num, int lower, int higher)
 float lerp(float v0, float v1, float t) 
 {
     return v0 + t * (v1 - v0);
-}
-
-std::ostream& operator<<(std::ostream& stream, const rl::Vector2& vec2)
-{
-    stream << (int)vec2.x << "; " << (int)vec2.y;
-    return stream;
 }
 
 #endif

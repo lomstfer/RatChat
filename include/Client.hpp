@@ -1,5 +1,7 @@
 #include "game_state_generated.h"
-#include "Globals.hpp"
+#include "GlobalsClient.hpp"
+#include "SpriteSheet.hpp"
+#include "Textures.hpp"
 #include <iostream>
 #include <enet/enet.h>
 #include <vector>
@@ -333,8 +335,8 @@ struct Client
         if (rl::IsMouseButtonReleased(rl::MOUSE_BUTTON_LEFT) && moving_card)
         {
             moving_card = false;
-            card_moving.x = rl::GetMousePosition().x + _camera_x - card_dims.x/2;
-            card_moving.y = rl::GetMousePosition().y + _camera_y - card_dims.x/2;
+            card_moving.x = _x - card_dims.x/2;
+            card_moving.y = _y - card_dims.y/2;
             addCardSend(card_moving);
             for (int i = 0; i < cards_on_hand.size(); i++)
             {
@@ -432,17 +434,17 @@ struct Client
             // draw players
             for (int i = 0; i < players_show.size(); i++)
             {
-                rl::Vector2 msgTextSize = rl::MeasureTextEx(font2, players_show[i].message.c_str(), 30, 0);
+                rl::Vector2 msgTextSize = rl::MeasureTextEx(font2, players_show[i].message.c_str(), 35, 0);
                 if (players_show[i].id == _id)
                 {
                     rl::Vector2 pDrawPos = {_x - _camera_x, _y - _camera_y};
                     ratSheet.draw({pDrawPos.x, pDrawPos.y}, _rotation);
-                    rl::DrawTextPro(font2, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 60}, {0,0}, 0, 30, 0, {255,255,255,255});
+                    rl::DrawTextPro(font2, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 60}, {0,0}, 0, 35, 0, {255,255,255,255});
                     continue;
                 }
                 rl::Vector2 pDrawPos = {players_show[i].x - _camera_x, players_show[i].y - _camera_y};
                 drawSheetFrame(TEX_RATS[players_show[i].rat_type], players_show[i].frame, ratSheet.frameWidth, ratSheet.frameHeight, pDrawPos, players_show[i].rotation, ratSheet.scale, ratSheet.origin);
-                rl::DrawTextPro(font2, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 60}, {0,0}, 0, 30, 0, {255,255,255,255});
+                rl::DrawTextPro(font2, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 60}, {0,0}, 0, 35, 0, {255,255,255,255});
             }
 
             // cards on hand
@@ -450,12 +452,11 @@ struct Client
             for (int i = cards_on_hand.size()-1; i >= 0; i--)
             {
                 int render_card = cards_on_hand.size()-1-i;
-                if (rl::CheckCollisionPointRec(rl::GetMousePosition(), {(float)cards_on_hand[i].x, (float)cards_on_hand[i].y, card_dims_hand.x, card_dims_hand.y}))
+                if (rl::CheckCollisionPointRec(rl::GetMousePosition(), {(float)cards_on_hand[i].x, (float)cards_on_hand[i].y, card_dims_hand.x, card_dims_hand.y}) && hover_card == -1)
                 {
                     if (rl::IsKeyPressed(rl::KEY_SPACE))
                         cards_on_hand[i].flipped = !cards_on_hand[i].flipped;
-                    if (hover_card == -1)
-                        hover_card = i;
+                    hover_card = i;
                 }
 
                 float total_width = cards_on_hand.size() * cards_on_hand_space + card_dims_hand.x/2.f;
