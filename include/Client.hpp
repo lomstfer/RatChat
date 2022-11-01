@@ -376,7 +376,7 @@ struct Client
                 if (rl::CheckCollisionRecs({_x-4*SPRITE_SCALE, _y-4*SPRITE_SCALE, (float)ratSheet.frameWidth+2*SPRITE_SCALE, (float)ratSheet.frameHeight+2*SPRITE_SCALE}, {(float)cards_on_ground[i].x, (float)cards_on_ground[i].y, card_dims_x, card_dims_y}))
                 {
                     fb_builder.Clear();
-                    auto card = GS::CreatePlayingCard(fb_builder, FLAG_PLAYINGCARD_DATA, FLAG_PLAYINGCARD_UPDATE, cards_on_ground[i].unique_id, cards_on_ground[i].value, cards_on_ground[i].x, cards_on_ground[i].y, !cards_on_ground[i].flipped);
+                    auto card = GS::CreatePlayingCard(fb_builder, FLAG_PLAYINGCARD_DATA, FLAG_PLAYINGCARD_UPDATE, cards_on_ground[i].unique_id, cards_on_ground[i].value, cards_on_ground[i].color, cards_on_ground[i].x, cards_on_ground[i].y, !cards_on_ground[i].flipped);
                     fb_builder.Finish(card);
                     enet_peer_send(host, 0, enet_packet_create(fb_builder.GetBufferPointer(), fb_builder.GetSize(), 0));
                     break;
