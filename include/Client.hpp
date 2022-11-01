@@ -126,7 +126,7 @@ struct Client
 
         cardsInputSend();
 
-        cardsFromHand();
+        cardsManage();
 
         // interpolate other players positions to their new positions that come from server and are server-known
         interpolatePlayers();
@@ -254,6 +254,69 @@ struct Client
         enet_peer_send(host, 0, enet_packet_create(fb_builder.GetBufferPointer(), fb_builder.GetSize(), 0));
     }
 
+    void removeCardSend(int unique_id)
+    {
+        fb_builder.Clear();
+        fb_builder.Finish(GS::CreatePlayingCard(fb_builder, FLAG_PLAYINGCARD_DATA, FLAG_PLAYINGCARD_REMOVE, unique_id));
+        enet_peer_send(host, 0, enet_packet_create(fb_builder.GetBufferPointer(), fb_builder.GetSize(), 0));
+    }
+
+    void updateCardSend(const PlayingCard& card)
+    {
+        fb_builder.Clear();
+        fb_builder.Finish(GS::CreatePlayingCard(fb_builder, FLAG_PLAYINGCARD_DATA, FLAG_PLAYINGCARD_UPDATE, card.unique_id, card.value, card.x, card.y, card.flipped));
+        enet_peer_send(host, 0, enet_packet_create(fb_builder.GetBufferPointer(), fb_builder.GetSize(), 0));
+    }
+
+    void cardsManage()
+    {
+        if (rl::IsMouseButtonPressed(rl::MOUSE_BUTTON_LEFT))
+        {
+            for (int i = cards_on_hand.size() - 1; i >= 0; i--)
+            {
+                if (rl::CheckCollisionPointRec(rl::GetMousePosition(), {(float)cards_on_hand[i].x, (float)cards_on_hand[i].y, card_dims_hand.x, card_dims_hand.y}))
+                {
+                    card_moving = cards_on_hand[i];
+                    moving_card = true;
+                    cards_on_hand.erase(cards_on_hand.begin() + i);
+                    return;
+                }
+            }
+
+            for (int i = cards_on_ground.size() - 1; i >= 0; i--)
+            {
+                if (rl::CheckCollisionPointRec(rl::GetMousePosition(), {(float)cards_on_ground[i].x - _camera_x, (float)cards_on_ground[i].y - _camera_y, card_dims.x, card_dims.y}) 
+                    /* && rl::CheckCollisionRecs({_x-4*SPRITE_SCALE, _y-4*SPRITE_SCALE, (float)ratSheet.frameWidth+2*SPRITE_SCALE, (float)ratSheet.frameHeight+2*SPRITE_SCALE}, {(float)cards_on_ground[i].x, (float)cards_on_ground[i].y, card_dims.x, card_dims.y}) */)
+                {
+                    Log("pressedcardonground");
+                    card_moving = cards_on_ground[i];
+                    moving_card = true;
+                    cards_on_ground.erase(cards_on_ground.begin() + i);
+                    return;
+                }
+            }
+        }
+
+        if (rl::IsMouseButtonReleased(rl::MOUSE_BUTTON_LEFT) && moving_card)
+        {
+            moving_card = false;
+            if (rl::GetMousePosition().y > WINH-card_dims_hand.y-50)
+            {
+                cards_on_hand.push_back(card_moving);
+                removeCardSend(card_moving.unique_id);
+            }
+            else if (rl::GetMousePosition().y <= WINH-card_dims_hand.y-50)
+            {
+                /* card_moving.x = _x - card_dims.x/2;
+                card_moving.y = _y - card_dims.y/2; */
+                card_moving.x = rl::GetMousePosition().x + _camera_x - card_dims.x/2;
+                card_moving.y = rl::GetMousePosition().y + _camera_y - card_dims.y/2;
+                addCardSend(card_moving);
+            }
+            
+        }
+    }
+
     void cardsInputSend()
     {
         if (isTypingMessage)
@@ -316,7 +379,7 @@ struct Client
         }
     }
 
-    void cardsFromHand()
+    /* void cardsFromHand()
     {
         bool mouse_pressed = false;
         if (rl::IsMouseButtonPressed(rl::MOUSE_BUTTON_LEFT))
@@ -347,7 +410,7 @@ struct Client
                 }
             }
         }
-    }
+    } */
 
     void interpolatePlayers()
     {
@@ -471,7 +534,6 @@ struct Client
             }
             if (hover_card != -1)
                 drawCard(cards_on_hand[hover_card], rl::Vector2{(float)cards_on_hand[hover_card].x - (card_dims_hover.x-card_dims_hand.x)/2, (float)cards_on_hand[hover_card].y - (card_dims_hover.y-card_dims_hand.y)/2}, 1.7f);
-
             if (moving_card)
                 drawCard(card_moving, {rl::GetMousePosition().x - card_dims_drag.x/2, rl::GetMousePosition().y - card_dims_drag.y/2}, 1.3f);
 

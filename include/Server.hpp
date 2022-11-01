@@ -135,7 +135,7 @@ struct Server
                     if (cards_on_ground[i].unique_id == pcData->unique_id())
                     {
                         cards_on_ground.erase(cards_on_ground.begin() + i);
-                        i -= 1;
+                        break;
                     }
                 }
                 break;
