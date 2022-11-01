@@ -10,6 +10,9 @@
 #define WINH 900
 #define SPRITE_SCALE 4
 
+#define card_dims_x 25.f * SPRITE_SCALE
+#define card_dims_y 35.f * SPRITE_SCALE
+
 struct Player
 {
     Player() = default;
@@ -28,10 +31,11 @@ class PlayingCard
 {
 public:
     PlayingCard() = default; 
-    PlayingCard(int unique_id, int value, int x, int y, bool flipped)
-    : unique_id(unique_id), value(value), x(x), y(y), flipped(flipped) {}
+    PlayingCard(int unique_id, int value, int color, int x, int y, bool flipped)
+    : unique_id(unique_id), value(value), color(color), x(x), y(y), flipped(flipped) {}
     int unique_id;
     int value;
+    int color;
     int x;
     int y;
     bool flipped;

@@ -40,6 +40,14 @@ struct Client
         ratSheet = SpriteSheet(TEX_RATS[_ratType], 8, SPRITE_SCALE, 12, {12,7});
         _camera_x = -WINW/2.f + ratSheet.frameWidth/2.f;
         _camera_y = -WINH/2.f + ratSheet.frameHeight/2.f;
+
+        for (int j = 0; j < 4; j++)
+        {
+            for (int i = 0; i < 13; i++)
+            {
+                cards_on_hand.emplace_back(rand()%999999, i+1, j, 0, 0, true);
+            }
+        }
     }
 
     ENetHost* client;
@@ -69,10 +77,9 @@ struct Client
 
     std::vector<PlayingCard> cards_on_ground;
     std::vector<PlayingCard> cards_on_hand;
-    rl::Vector2 card_dims = {25 * SPRITE_SCALE, 35 * SPRITE_SCALE};
-    rl::Vector2 card_dims_hand = {card_dims.x * 1.5f, card_dims.y * 1.5f};
-    rl::Vector2 card_dims_hover = {card_dims.x * 1.7f, card_dims.y * 1.7f};
-    rl::Vector2 card_dims_drag = {card_dims.x * 1.3f, card_dims.y * 1.3f};
+    rl::Vector2 card_dims_hand = {card_dims_x * 1.5f, card_dims_y * 1.5f};
+    rl::Vector2 card_dims_hover = {card_dims_x * 1.7f, card_dims_y * 1.7f};
+    rl::Vector2 card_dims_drag = {card_dims_x * 1.3f, card_dims_y * 1.3f};
     float cards_on_hand_space = card_dims_hand.x/1.5f;
     int cards_id_increment = 0;
     PlayingCard card_moving;
@@ -160,7 +167,7 @@ struct Client
         for (int i = 0; i < game_state->cards_on_ground()->size(); i++)
         {
             auto card = game_state->cards_on_ground()->Get(i);
-            cards_on_ground.emplace_back(card->unique_id(), card->value(), card->x(), card->y(), card->flipped());
+            cards_on_ground.emplace_back(card->unique_id(), card->value(), card->color(), card->x(), card->y(), card->flipped());
         }
     }
 
@@ -248,9 +255,9 @@ struct Client
 
     void addCardSend(const PlayingCard& card)
     {
-        cards_on_ground.emplace_back(rand()%999999, card.value, card.x, card.y, card.flipped);
+        cards_on_ground.emplace_back(rand()%999999, card.value, card.color, card.x, card.y, card.flipped);
         fb_builder.Clear();
-        fb_builder.Finish(GS::CreatePlayingCard(fb_builder, FLAG_PLAYINGCARD_DATA, FLAG_PLAYINGCARD_ADD, cards_on_ground.back().unique_id, cards_on_ground.back().value, cards_on_ground.back().x, cards_on_ground.back().y, cards_on_ground.back().flipped));
+        fb_builder.Finish(GS::CreatePlayingCard(fb_builder, FLAG_PLAYINGCARD_DATA, FLAG_PLAYINGCARD_ADD, cards_on_ground.back().unique_id, cards_on_ground.back().value, cards_on_ground.back().color, cards_on_ground.back().x, cards_on_ground.back().y, cards_on_ground.back().flipped));
         enet_peer_send(host, 0, enet_packet_create(fb_builder.GetBufferPointer(), fb_builder.GetSize(), 0));
     }
 
@@ -264,7 +271,7 @@ struct Client
     void updateCardSend(const PlayingCard& card)
     {
         fb_builder.Clear();
-        fb_builder.Finish(GS::CreatePlayingCard(fb_builder, FLAG_PLAYINGCARD_DATA, FLAG_PLAYINGCARD_UPDATE, card.unique_id, card.value, card.x, card.y, card.flipped));
+        fb_builder.Finish(GS::CreatePlayingCard(fb_builder, FLAG_PLAYINGCARD_DATA, FLAG_PLAYINGCARD_UPDATE, card.unique_id, card.value, card.color, card.x, card.y, card.flipped));
         enet_peer_send(host, 0, enet_packet_create(fb_builder.GetBufferPointer(), fb_builder.GetSize(), 0));
     }
 
@@ -278,6 +285,7 @@ struct Client
                 {
                     card_moving = cards_on_hand[i];
                     moving_card = true;
+                    removeCardSend(cards_on_hand[i].unique_id);
                     cards_on_hand.erase(cards_on_hand.begin() + i);
                     return;
                 }
@@ -285,12 +293,13 @@ struct Client
 
             for (int i = cards_on_ground.size() - 1; i >= 0; i--)
             {
-                if (rl::CheckCollisionPointRec(rl::GetMousePosition(), {(float)cards_on_ground[i].x - _camera_x, (float)cards_on_ground[i].y - _camera_y, card_dims.x, card_dims.y}) 
-                    /* && rl::CheckCollisionRecs({_x-4*SPRITE_SCALE, _y-4*SPRITE_SCALE, (float)ratSheet.frameWidth+2*SPRITE_SCALE, (float)ratSheet.frameHeight+2*SPRITE_SCALE}, {(float)cards_on_ground[i].x, (float)cards_on_ground[i].y, card_dims.x, card_dims.y}) */)
+                if (rl::CheckCollisionPointRec(rl::GetMousePosition(), {(float)cards_on_ground[i].x - _camera_x, (float)cards_on_ground[i].y - _camera_y, card_dims_x, card_dims_y}) 
+                    /* && rl::CheckCollisionRecs({_x-4*SPRITE_SCALE, _y-4*SPRITE_SCALE, (float)ratSheet.frameWidth+2*SPRITE_SCALE, (float)ratSheet.frameHeight+2*SPRITE_SCALE}, {(float)cards_on_ground[i].x, (float)cards_on_ground[i].y, card_dims_x, card_dims_y}) */)
                 {
                     Log("pressedcardonground");
                     card_moving = cards_on_ground[i];
                     moving_card = true;
+                    removeCardSend(cards_on_ground[i].unique_id);
                     cards_on_ground.erase(cards_on_ground.begin() + i);
                     return;
                 }
@@ -303,14 +312,11 @@ struct Client
             if (rl::GetMousePosition().y > WINH-card_dims_hand.y-50)
             {
                 cards_on_hand.push_back(card_moving);
-                removeCardSend(card_moving.unique_id);
             }
             else if (rl::GetMousePosition().y <= WINH-card_dims_hand.y-50)
             {
-                /* card_moving.x = _x - card_dims.x/2;
-                card_moving.y = _y - card_dims.y/2; */
-                card_moving.x = rl::GetMousePosition().x + _camera_x - card_dims.x/2;
-                card_moving.y = rl::GetMousePosition().y + _camera_y - card_dims.y/2;
+                card_moving.x = rl::GetMousePosition().x + _camera_x - card_dims_x/2;
+                card_moving.y = rl::GetMousePosition().y + _camera_y - card_dims_y/2;
                 addCardSend(card_moving);
             }
             
@@ -327,7 +333,7 @@ struct Client
             {
                 for (int i = cards_on_ground.size() - 1; i >= 0; i--)
                 {
-                    if (rl::CheckCollisionRecs({_x-4*SPRITE_SCALE, _y-4*SPRITE_SCALE, (float)ratSheet.frameWidth+2*SPRITE_SCALE, (float)ratSheet.frameHeight+2*SPRITE_SCALE}, {(float)cards_on_ground[i].x, (float)cards_on_ground[i].y, card_dims.x, card_dims.y}))
+                    if (rl::CheckCollisionRecs({_x-4*SPRITE_SCALE, _y-4*SPRITE_SCALE, (float)ratSheet.frameWidth+2*SPRITE_SCALE, (float)ratSheet.frameHeight+2*SPRITE_SCALE}, {(float)cards_on_ground[i].x, (float)cards_on_ground[i].y, card_dims_x, card_dims_y}))
                     {
                         cards_on_hand.push_back(cards_on_ground[i]);
                         fb_builder.Clear();
@@ -361,13 +367,13 @@ struct Client
                 temp_value = 9;
 
             if (temp_value != -1)
-                addCardSend(PlayingCard(rand()%999999, temp_value, _x - card_dims.x/2, _y - card_dims.y/2, false));
+                addCardSend(PlayingCard(rand()%999999, temp_value, 1, _x - card_dims_x/2, _y - card_dims_y/2, false));
         }
         else if (rl::IsKeyPressed(rl::KEY_SPACE))
         {
             for (int i = cards_on_ground.size() - 1; i >= 0; i--)
             {
-                if (rl::CheckCollisionRecs({_x-4*SPRITE_SCALE, _y-4*SPRITE_SCALE, (float)ratSheet.frameWidth+2*SPRITE_SCALE, (float)ratSheet.frameHeight+2*SPRITE_SCALE}, {(float)cards_on_ground[i].x, (float)cards_on_ground[i].y, card_dims.x, card_dims.y}))
+                if (rl::CheckCollisionRecs({_x-4*SPRITE_SCALE, _y-4*SPRITE_SCALE, (float)ratSheet.frameWidth+2*SPRITE_SCALE, (float)ratSheet.frameHeight+2*SPRITE_SCALE}, {(float)cards_on_ground[i].x, (float)cards_on_ground[i].y, card_dims_x, card_dims_y}))
                 {
                     fb_builder.Clear();
                     auto card = GS::CreatePlayingCard(fb_builder, FLAG_PLAYINGCARD_DATA, FLAG_PLAYINGCARD_UPDATE, cards_on_ground[i].unique_id, cards_on_ground[i].value, cards_on_ground[i].x, cards_on_ground[i].y, !cards_on_ground[i].flipped);
@@ -378,39 +384,6 @@ struct Client
             }
         }
     }
-
-    /* void cardsFromHand()
-    {
-        bool mouse_pressed = false;
-        if (rl::IsMouseButtonPressed(rl::MOUSE_BUTTON_LEFT))
-            mouse_pressed = true;
-        if (mouse_pressed)
-        {
-            for (int i = 0; i < cards_on_hand.size(); i++)
-            {
-                if (rl::CheckCollisionPointRec(rl::GetMousePosition(), {(float)cards_on_hand[i].x, (float)cards_on_hand[i].y, card_dims_hand.x, card_dims_hand.y}))
-                {
-                    card_moving = cards_on_hand[i];
-                    moving_card = true;
-                }
-            }
-        }
-        if (rl::IsMouseButtonReleased(rl::MOUSE_BUTTON_LEFT) && moving_card)
-        {
-            moving_card = false;
-            card_moving.x = _x - card_dims.x/2;
-            card_moving.y = _y - card_dims.y/2;
-            addCardSend(card_moving);
-            for (int i = 0; i < cards_on_hand.size(); i++)
-            {
-                if (cards_on_hand[i].unique_id == card_moving.unique_id)
-                {
-                    cards_on_hand.erase(cards_on_hand.begin() + i);
-                    break;
-                }
-            }
-        }
-    } */
 
     void interpolatePlayers()
     {
@@ -468,8 +441,8 @@ struct Client
     {
         rl::DrawTexturePro(
             TEX_CARDS_SHEET, 
-            {card.flipped ? 0 : card.value * (card_dims.x/SPRITE_SCALE), 0, card_dims.x/SPRITE_SCALE, card_dims.y/SPRITE_SCALE}, 
-            {(float)card.x - _camera_x, (float)card.y - _camera_y, card_dims.x*size_multiplier, card_dims.y*size_multiplier}, 
+            {card.flipped ? 0 : card.value * (card_dims_x/SPRITE_SCALE), card.color * card_dims_y/SPRITE_SCALE, card_dims_x/SPRITE_SCALE, card_dims_y/SPRITE_SCALE}, 
+            {(float)card.x - _camera_x, (float)card.y - _camera_y, card_dims_x*size_multiplier, card_dims_y*size_multiplier}, 
             {0,0}, 0, {255,255,255,255});
     }
 
@@ -477,8 +450,8 @@ struct Client
     {
         rl::DrawTexturePro(
             TEX_CARDS_SHEET, 
-            {card.flipped ? 0 : card.value * (card_dims.x/SPRITE_SCALE), 0, card_dims.x/SPRITE_SCALE, card_dims.y/SPRITE_SCALE}, 
-            {(float)position.x, (float)position.y, card_dims.x*size_multiplier, card_dims.y*size_multiplier}, 
+            {card.flipped ? 0 : card.value * (card_dims_x/SPRITE_SCALE), card.color * card_dims_y/SPRITE_SCALE, card_dims_x/SPRITE_SCALE, card_dims_y/SPRITE_SCALE}, 
+            {(float)position.x, (float)position.y, card_dims_x*size_multiplier, card_dims_y*size_multiplier}, 
             {0,0}, 0, {255,255,255,255});
     }
 
@@ -529,7 +502,7 @@ struct Client
                     total_width = cards_on_hand.size() * cards_on_hand_space;
                 }
                 cards_on_hand[render_card].x = WINW/2 - total_width/2 + cards_on_hand_space*render_card;
-                cards_on_hand[render_card].y = WINH - card_dims.y - 50;
+                cards_on_hand[render_card].y = WINH - card_dims_y - 50;
                 drawCard(cards_on_hand[render_card], rl::Vector2{(float)cards_on_hand[render_card].x, (float)cards_on_hand[render_card].y}, 1.5f);
             }
             if (hover_card != -1)

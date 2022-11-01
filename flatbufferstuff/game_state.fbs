@@ -21,6 +21,7 @@ table PlayingCard {
     command:int;
     unique_id:int;
     value:int;
+    color:int;
     x:int;
     y:int;
     flipped:bool;

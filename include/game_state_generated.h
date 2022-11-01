@@ -236,9 +236,10 @@ struct PlayingCard FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
     VT_COMMAND = 6,
     VT_UNIQUE_ID = 8,
     VT_VALUE = 10,
-    VT_X = 12,
-    VT_Y = 14,
-    VT_FLIPPED = 16
+    VT_COLOR = 12,
+    VT_X = 14,
+    VT_Y = 16,
+    VT_FLIPPED = 18
   };
   int32_t packet_type() const {
     return GetField<int32_t>(VT_PACKET_TYPE, 0);
@@ -251,6 +252,9 @@ struct PlayingCard FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   int32_t value() const {
     return GetField<int32_t>(VT_VALUE, 0);
+  }
+  int32_t color() const {
+    return GetField<int32_t>(VT_COLOR, 0);
   }
   int32_t x() const {
     return GetField<int32_t>(VT_X, 0);
@@ -267,6 +271,7 @@ struct PlayingCard FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
            VerifyField<int32_t>(verifier, VT_COMMAND, 4) &&
            VerifyField<int32_t>(verifier, VT_UNIQUE_ID, 4) &&
            VerifyField<int32_t>(verifier, VT_VALUE, 4) &&
+           VerifyField<int32_t>(verifier, VT_COLOR, 4) &&
            VerifyField<int32_t>(verifier, VT_X, 4) &&
            VerifyField<int32_t>(verifier, VT_Y, 4) &&
            VerifyField<uint8_t>(verifier, VT_FLIPPED, 1) &&
@@ -289,6 +294,9 @@ struct PlayingCardBuilder {
   }
   void add_value(int32_t value) {
     fbb_.AddElement<int32_t>(PlayingCard::VT_VALUE, value, 0);
+  }
+  void add_color(int32_t color) {
+    fbb_.AddElement<int32_t>(PlayingCard::VT_COLOR, color, 0);
   }
   void add_x(int32_t x) {
     fbb_.AddElement<int32_t>(PlayingCard::VT_X, x, 0);
@@ -316,12 +324,14 @@ inline flatbuffers::Offset<PlayingCard> CreatePlayingCard(
     int32_t command = 0,
     int32_t unique_id = 0,
     int32_t value = 0,
+    int32_t color = 0,
     int32_t x = 0,
     int32_t y = 0,
     bool flipped = false) {
   PlayingCardBuilder builder_(_fbb);
   builder_.add_y(y);
   builder_.add_x(x);
+  builder_.add_color(color);
   builder_.add_value(value);
   builder_.add_unique_id(unique_id);
   builder_.add_command(command);
