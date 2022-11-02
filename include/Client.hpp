@@ -137,7 +137,6 @@ struct Client
 
         cardsManage();
 
-        // interpolate other players positions to their new positions that come from server and are server-known
         interpolatePlayers();
 
         render();
@@ -279,6 +278,17 @@ struct Client
 
     void cardsManage()
     {
+        if (moving_card)
+        {
+            for (int i = 0; i < cards_on_ground.size(); i++)
+            {
+                if (cards_on_ground[i].unique_id == card_moving.unique_id)
+                {
+                    cards_on_ground.erase(cards_on_ground.begin() + i);
+                    break;
+                }
+            }
+        }
         if (rl::IsMouseButtonPressed(rl::MOUSE_BUTTON_LEFT))
         {
             for (int i = cards_on_hand.size() - 1; i >= 0; i--)
@@ -286,8 +296,8 @@ struct Client
                 if (rl::CheckCollisionPointRec(rl::GetMousePosition(), {(float)cards_on_hand[i].x, (float)cards_on_hand[i].y, card_dims_hand.x, card_dims_hand.y}))
                 {
                     card_moving = cards_on_hand[i];
-                    moving_card = true;
                     cards_on_hand.erase(cards_on_hand.begin() + i);
+                    moving_card = true;
                     from_hand = true;
                     return;
                 }
@@ -298,12 +308,10 @@ struct Client
                 if (rl::CheckCollisionPointRec(rl::GetMousePosition(), {(float)cards_on_ground[i].x - _camera_x, (float)cards_on_ground[i].y - _camera_y, card_dims_x, card_dims_y}) 
                     /* && rl::CheckCollisionRecs({_x-4*SPRITE_SCALE, _y-4*SPRITE_SCALE, (float)ratSheet.frameWidth+2*SPRITE_SCALE, (float)ratSheet.frameHeight+2*SPRITE_SCALE}, {(float)cards_on_ground[i].x, (float)cards_on_ground[i].y, card_dims_x, card_dims_y}) */)
                 {
-                    Log("pressedcardonground");
                     card_moving = cards_on_ground[i];
-                    removeCardSend(card_moving.unique_id);
                     cards_on_ground.erase(cards_on_ground.begin() + i);
                     moving_card = true;
-                    from_ground = true;
+                    from_hand = true;
                     return;
                 }
             }
@@ -314,23 +322,25 @@ struct Client
             moving_card = false;
             if (rl::GetMousePosition().y > WINH-card_dims_hand.y-50)
             {
+                if (from_ground)
+                    removeCardSend(card_moving.unique_id);
+                cards_on_hand.push_back(card_moving);
                 from_ground = false;
                 from_hand = false;
-                cards_on_hand.push_back(card_moving);
             }
             else if (rl::GetMousePosition().y <= WINH-card_dims_hand.y-50)
             {
                 card_moving.x = rl::GetMousePosition().x + _camera_x - card_dims_x/2;
                 card_moving.y = rl::GetMousePosition().y + _camera_y - card_dims_y/2;
                 if (from_ground) {
-                    from_ground = false;
                     cards_on_ground.push_back(card_moving);
-                    addCardSend(card_moving);
+                    updateCardSend(card_moving);
                 }
                 if (from_hand) {
-                    from_hand = false;
                     addCardSend(card_moving);
                 }
+                from_ground = false;
+                from_hand = false;
             }
         }
     }
