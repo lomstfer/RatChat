@@ -84,6 +84,8 @@ struct Client
     int cards_id_increment = 0;
     PlayingCard card_moving;
     bool moving_card = false;
+    bool from_hand = false;
+    bool from_ground = false;
 
     SpriteSheet ratSheet;
     int _ratType;
@@ -285,8 +287,8 @@ struct Client
                 {
                     card_moving = cards_on_hand[i];
                     moving_card = true;
-                    removeCardSend(cards_on_hand[i].unique_id);
                     cards_on_hand.erase(cards_on_hand.begin() + i);
+                    from_hand = true;
                     return;
                 }
             }
@@ -298,9 +300,10 @@ struct Client
                 {
                     Log("pressedcardonground");
                     card_moving = cards_on_ground[i];
-                    moving_card = true;
-                    removeCardSend(cards_on_ground[i].unique_id);
+                    removeCardSend(card_moving.unique_id);
                     cards_on_ground.erase(cards_on_ground.begin() + i);
+                    moving_card = true;
+                    from_ground = true;
                     return;
                 }
             }
@@ -311,15 +314,24 @@ struct Client
             moving_card = false;
             if (rl::GetMousePosition().y > WINH-card_dims_hand.y-50)
             {
+                from_ground = false;
+                from_hand = false;
                 cards_on_hand.push_back(card_moving);
             }
             else if (rl::GetMousePosition().y <= WINH-card_dims_hand.y-50)
             {
                 card_moving.x = rl::GetMousePosition().x + _camera_x - card_dims_x/2;
                 card_moving.y = rl::GetMousePosition().y + _camera_y - card_dims_y/2;
-                addCardSend(card_moving);
+                if (from_ground) {
+                    from_ground = false;
+                    cards_on_ground.push_back(card_moving);
+                    addCardSend(card_moving);
+                }
+                if (from_hand) {
+                    from_hand = false;
+                    addCardSend(card_moving);
+                }
             }
-            
         }
     }
 

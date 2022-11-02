@@ -138,6 +138,13 @@ struct Server
             switch (pcData->command())
             {
             case FLAG_PLAYINGCARD_ADD:
+                for (int i = 0; i < cards_on_ground.size(); i++)
+                {
+                    if (cards_on_ground[i].unique_id == pcData->unique_id()) {
+                        cards_on_ground.erase(cards_on_ground.begin() + i);
+                        break;
+                    }
+                }
                 cards_on_ground.emplace_back(pcData->unique_id(), pcData->value(), pcData->color(), pcData->x(), pcData->y(), pcData->flipped());
                 break;
 
