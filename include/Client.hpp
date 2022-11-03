@@ -18,7 +18,7 @@ struct Client
         if (client == NULL)
             Log("error: create client");
         enet_address_set_host(&address, ip_address);
-        address.port = 25565;
+        address.port = 365;
         host = enet_host_connect(client, &address, 1, 0);
         if (host == NULL)
             Log("error: connecting to host");
@@ -26,7 +26,7 @@ struct Client
         font = rl::LoadFont("assets/UbuntuCondensed-Regular.ttf");
         font2 = rl::LoadFont("assets/NanumPenScript-Regular.ttf");
 
-        render_tex = rl::LoadRenderTexture(WINW, WINH);
+        render_tex = rl::LoadRenderTexture(GAMEW, GAMEH);
 
         bgTexture = TEX_DESERT;
         bgSize = {(float)bgTexture.width*SPRITE_SCALE, (float)bgTexture.height*SPRITE_SCALE};
@@ -40,8 +40,8 @@ struct Client
 
         _ratType = rand()%7;
         ratSheet = SpriteSheet(TEX_RATS[_ratType], 8, SPRITE_SCALE, 12, {12,7});
-        _camera_x = -WINW/2.f + ratSheet.frameWidth/2.f;
-        _camera_y = -WINH/2.f + ratSheet.frameHeight/2.f;
+        _camera_x = -GAMEW/2.f + ratSheet.frameWidth/2.f;
+        _camera_y = -GAMEH/2.f + ratSheet.frameHeight/2.f;
 
         for (int j = 0; j < 4; j++)
         {
@@ -119,7 +119,8 @@ struct Client
     void update()
     {
         dt = rl::GetFrameTime();
-        mouse_position = rl::GetMousePosition() * ((float)WINW/SCREENW);
+        mouse_position.x = rl::GetMousePosition().x * ((float)GAMEW/SCREENW);
+        mouse_position.y = rl::GetMousePosition().y * ((float)GAMEH/SCREENH);
         send_now = false;
         if (enet_host_service(client, &event, 0) > 0) 
         {
@@ -212,32 +213,60 @@ struct Client
     {
         _speed_x = 0;
         _speed_y = 0;
+
         _pressed_time += dt;
         if (_pressed_time >= 1)
         {
             _pressed_time = 0;
             _pressed = false;
         }
-        if (rl::IsKeyDown(rl::KEY_LEFT))
+
+        bool left = rl::IsKeyDown(rl::KEY_LEFT);
+        bool right = rl::IsKeyDown(rl::KEY_RIGHT);
+        bool up = rl::IsKeyDown(rl::KEY_UP);
+        bool down = rl::IsKeyDown(rl::KEY_DOWN);
+
+        if (left)
         {
             _pressed = true;
             _speed_x = -_speed;
         }
-        if (rl::IsKeyDown(rl::KEY_RIGHT))
+        if (right)
         {
             _pressed = true;
             _speed_x = _speed;
         }
-        if (rl::IsKeyDown(rl::KEY_UP))
+        if (up)
         {
             _pressed = true;
             _speed_y = -_speed;
+            if (left)
+            {
+                _speed_x = -_speed * sqrt(0.5f);
+                _speed_y = -_speed * sqrt(0.5f);
+            }
+            if (right)
+            {
+                _speed_x = _speed * sqrt(0.5f);
+                _speed_y = -_speed * sqrt(0.5f);
+            }
         }
-        if (rl::IsKeyDown(rl::KEY_DOWN))
+        if (down)
         {
             _pressed = true;
             _speed_y = _speed;
+            if (left)
+            {
+                _speed_x = -_speed * sqrt(0.5f);
+                _speed_y = _speed * sqrt(0.5f);
+            }
+            if (right)
+            {
+                _speed_x = _speed * sqrt(0.5f);
+                _speed_y = _speed * sqrt(0.5f);
+            }
         }
+
         if (_speed_x || _speed_y)
         {
             ratSheet.animate(dt);
@@ -255,8 +284,8 @@ struct Client
             enet_peer_send(host, 0, enet_packet_create(fb_builder.GetBufferPointer(), fb_builder.GetSize(), 0));
         }
 
-        float d_cam_x = _x - _camera_x - WINW/2.f + ratSheet.frameWidth/2.f;
-        float d_cam_y = _y - _camera_y - WINH/2.f + ratSheet.frameHeight/2.f;
+        float d_cam_x = _x - _camera_x - GAMEW/2.f + ratSheet.frameWidth/2.f;
+        float d_cam_y = _y - _camera_y - GAMEH/2.f + ratSheet.frameHeight/2.f;
         _camera_x += d_cam_x*5.f * dt;
         _camera_y += d_cam_y*5.f * dt;
     }
@@ -328,7 +357,7 @@ struct Client
         {
             moving_card = false;
             // place on hand
-            if (mouse_position.y > WINH-card_dims_hand.y-50)
+            if (mouse_position.y > GAMEH-card_dims_hand.y-50)
             {
                 if (from_ground)
                     removeCardSend(card_moving.unique_id);
@@ -337,7 +366,7 @@ struct Client
                 from_hand = false;
             }
             // place on ground
-            else if (mouse_position.y <= WINH-card_dims_hand.y-50)
+            else if (mouse_position.y <= GAMEH-card_dims_hand.y-50)
             {
                 card_moving.x = mouse_position.x + _camera_x - card_dims_x/2;
                 card_moving.y = mouse_position.y + _camera_y - card_dims_y/2;
@@ -527,13 +556,18 @@ struct Client
                 }
 
                 float total_width = cards_on_hand.size() * cards_on_hand_space + card_dims_hand.x/2.f;
-                if (total_width >= WINW)
+                if (total_width >= GAMEW)
                 {
                     cards_on_hand_space *= 0.99;
                     total_width = cards_on_hand.size() * cards_on_hand_space;
                 }
-                cards_on_hand[render_card].x = WINW/2 - total_width/2 + cards_on_hand_space*render_card;
-                cards_on_hand[render_card].y = WINH - card_dims_y - 50;
+                else if (total_width < GAMEW - 200 && cards_on_hand.size() > 11)
+                {
+                    cards_on_hand_space *= 1.01;
+                    total_width = cards_on_hand.size() * cards_on_hand_space;
+                }
+                cards_on_hand[render_card].x = GAMEW/2 - total_width/2 + cards_on_hand_space*render_card;
+                cards_on_hand[render_card].y = GAMEH - card_dims_y - 50;
                 drawCard(cards_on_hand[render_card], rl::Vector2{(float)cards_on_hand[render_card].x, (float)cards_on_hand[render_card].y}, 1.5f);
             }
             if (hover_card != -1)
@@ -547,8 +581,8 @@ struct Client
             if (isTypingMessage)
             {
                 rl::Vector2 msgTextSize = rl::MeasureTextEx(font2, typeMessage.c_str(), 100, 0);
-                rl::DrawTextPro(font2, typeMessage.c_str(), {WINW/2.f - msgTextSize.x/2, 50}, {0,0}, 0, 100, 0, {255,255,255,255});
-                rl::DrawRectangle(WINW/2.f + msgTextSize.x/2, 50 + msgTextSize.y - 20, 25, int(rl::GetTime()*5.0)%2 * 5.f, {255,255,255,200});
+                rl::DrawTextPro(font2, typeMessage.c_str(), {GAMEW/2.f - msgTextSize.x/2, 50}, {0,0}, 0, 100, 0, {255,255,255,255});
+                rl::DrawRectangle(GAMEW/2.f + msgTextSize.x/2, 50 + msgTextSize.y - 20, 25, int(rl::GetTime()*5.0)%2 * 5.f, {255,255,255,200});
             }
         rl::EndTextureMode();
 

@@ -6,8 +6,8 @@
 
 #define Log(x) std::cout << x << std::endl
 #define Lognl(x) std::cout << std::endl << x << std::endl
-#define WINW 1600
-#define WINH 900
+#define GAMEW 1600
+#define GAMEH 900
 #define SPRITE_SCALE 4
 
 #define card_dims_x 25.f * SPRITE_SCALE

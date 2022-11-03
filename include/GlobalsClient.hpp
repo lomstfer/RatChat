@@ -9,9 +9,13 @@ std::ostream& operator<<(std::ostream& stream, const rl::Vector2& vec2);
 rl::Vector2 operator*(rl::Vector2 vec2, const float multiplier);
 
 void changeWindowSize(int newWidth, int newHeight);
+void setScreenVars(int width, int height);
 
 extern int SCREENW;
 extern int SCREENH;
+
+#define haveMonitorWidth rl::GetMonitorWidth(rl::GetCurrentMonitor())
+#define haveMonitorHeight rl::GetMonitorHeight(rl::GetCurrentMonitor())
 
 #define RAT_WIDTH 24
 #define RAT_HEIGHT 24

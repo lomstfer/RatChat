@@ -14,7 +14,7 @@ struct Server
             Log("error: init enet");
         atexit(enet_deinitialize);
         address.host = ENET_HOST_ANY;
-        address.port = 25565;
+        address.port = 365;
         host = enet_host_create(&address, 32, 1, 0, 0);
         if (host == NULL)
             Log("error: create server");
@@ -64,7 +64,6 @@ struct Server
             case ENET_EVENT_TYPE_CONNECT:
                 Lognl("connected:");
                 Log("\tid: " + std::to_string(event.peer->incomingPeerID));
-                Log("\taddress: " + std::to_string(event.peer->address.host));
                 addClient(event.peer->incomingPeerID);
                 broadcastState();
                 break;
@@ -79,7 +78,6 @@ struct Server
             case ENET_EVENT_TYPE_DISCONNECT:
                 Lognl("disconnected:");
                 Log("\tid: " + std::to_string(event.peer->incomingPeerID));
-                Log("\taddress: " + std::to_string(event.peer->address.host));
                 removeClient(event.peer->incomingPeerID);
                 broadcastState();
                 event.peer->data = NULL;

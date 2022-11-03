@@ -14,11 +14,21 @@ rl::Vector2 operator*(rl::Vector2 vec2, const float multiplier)
     return {vec2.x * multiplier, vec2.y * multiplier};
 }
 
-void changeWindowSize(int newWidth, int newHeight) {
-    rl::SetWindowPosition(0,0);
-    rl::SetWindowSize(newWidth, newHeight);
-    SCREENW = newWidth;
-    SCREENH = newHeight;
+void changeWindowSize(int width, int height) {
+    rl::SetWindowPosition((haveMonitorWidth-width)/2,(haveMonitorHeight-height)/2);
+    rl::SetWindowSize(width, height);
+    setScreenVars(width, height);
+}
+
+void setScreenVars(int width, int height)
+{
+    SCREENW = width;
+    SCREENH = height;
+    if (rl::IsWindowMaximized() && !rl::IsWindowFullscreen())
+    {
+        SCREENW = rl::GetMonitorWidth(rl::GetCurrentMonitor());
+        SCREENH = rl::GetMonitorHeight(rl::GetCurrentMonitor());
+    }
 }
 
 rl::Texture2D TEX_DESERT;
