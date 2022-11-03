@@ -20,7 +20,7 @@ struct Server
             Log("error: create server");
         fb_builder = flatbuffers::FlatBufferBuilder(1024);
 
-        for (int am = 0; am < 100; am++)
+        for (int am = 0; am < 10; am++)
         {
             for (int i = 0; i < 13; i++)
             {
@@ -164,7 +164,8 @@ struct Server
                 {
                     if (cards_on_ground[i].unique_id == pcData->unique_id())
                     {
-                        cards_on_ground[i] = PlayingCard(pcData->unique_id(), pcData->value(), pcData->color(), pcData->x(), pcData->y(), pcData->flipped());
+                        cards_on_ground.erase(cards_on_ground.begin() + i);
+                        cards_on_ground.emplace_back(pcData->unique_id(), pcData->value(), pcData->color(), pcData->x(), pcData->y(), pcData->flipped());
                     }
                 }
                 break;

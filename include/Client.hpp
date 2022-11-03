@@ -1,7 +1,7 @@
 #include "game_state_generated.h"
+#include "Globals.hpp"
 #include "GlobalsClient.hpp"
 #include "SpriteSheet.hpp"
-#include "Textures.hpp"
 #include <iostream>
 #include <enet/enet.h>
 #include <vector>
@@ -26,6 +26,8 @@ struct Client
         font = rl::LoadFont("assets/UbuntuCondensed-Regular.ttf");
         font2 = rl::LoadFont("assets/NanumPenScript-Regular.ttf");
 
+        render_tex = rl::LoadRenderTexture(WINW, WINH);
+
         bgTexture = TEX_DESERT;
         bgSize = {(float)bgTexture.width*SPRITE_SCALE, (float)bgTexture.height*SPRITE_SCALE};
         for (int x = -3; x < 3; x++)
@@ -49,6 +51,8 @@ struct Client
             }
         }
     }
+
+    rl::RenderTexture2D render_tex;
 
     ENetHost* client;
     ENetAddress address;
@@ -109,10 +113,13 @@ struct Client
     std::string typeMessage = "";
     bool isTypingMessage = false;
 
+    rl::Vector2 mouse_position;
+
     float dt;
     void update()
     {
         dt = rl::GetFrameTime();
+        mouse_position = rl::GetMousePosition() * ((float)WINW/SCREENW);
         send_now = false;
         if (enet_host_service(client, &event, 0) > 0) 
         {
@@ -293,7 +300,7 @@ struct Client
         {
             for (int i = cards_on_hand.size() - 1; i >= 0; i--)
             {
-                if (rl::CheckCollisionPointRec(rl::GetMousePosition(), {(float)cards_on_hand[i].x, (float)cards_on_hand[i].y, card_dims_hand.x, card_dims_hand.y}))
+                if (rl::CheckCollisionPointRec(mouse_position, {(float)cards_on_hand[i].x, (float)cards_on_hand[i].y, card_dims_hand.x, card_dims_hand.y}))
                 {
                     card_moving = cards_on_hand[i];
                     cards_on_hand.erase(cards_on_hand.begin() + i);
@@ -305,13 +312,13 @@ struct Client
 
             for (int i = cards_on_ground.size() - 1; i >= 0; i--)
             {
-                if (rl::CheckCollisionPointRec(rl::GetMousePosition(), {(float)cards_on_ground[i].x - _camera_x, (float)cards_on_ground[i].y - _camera_y, card_dims_x, card_dims_y}) 
+                if (rl::CheckCollisionPointRec(mouse_position, {(float)cards_on_ground[i].x - _camera_x, (float)cards_on_ground[i].y - _camera_y, card_dims_x, card_dims_y}) 
                     /* && rl::CheckCollisionRecs({_x-4*SPRITE_SCALE, _y-4*SPRITE_SCALE, (float)ratSheet.frameWidth+2*SPRITE_SCALE, (float)ratSheet.frameHeight+2*SPRITE_SCALE}, {(float)cards_on_ground[i].x, (float)cards_on_ground[i].y, card_dims_x, card_dims_y}) */)
                 {
                     card_moving = cards_on_ground[i];
                     cards_on_ground.erase(cards_on_ground.begin() + i);
                     moving_card = true;
-                    from_hand = true;
+                    from_ground = true;
                     return;
                 }
             }
@@ -320,7 +327,8 @@ struct Client
         if (rl::IsMouseButtonReleased(rl::MOUSE_BUTTON_LEFT) && moving_card)
         {
             moving_card = false;
-            if (rl::GetMousePosition().y > WINH-card_dims_hand.y-50)
+            // place on hand
+            if (mouse_position.y > WINH-card_dims_hand.y-50)
             {
                 if (from_ground)
                     removeCardSend(card_moving.unique_id);
@@ -328,10 +336,11 @@ struct Client
                 from_ground = false;
                 from_hand = false;
             }
-            else if (rl::GetMousePosition().y <= WINH-card_dims_hand.y-50)
+            // place on ground
+            else if (mouse_position.y <= WINH-card_dims_hand.y-50)
             {
-                card_moving.x = rl::GetMousePosition().x + _camera_x - card_dims_x/2;
-                card_moving.y = rl::GetMousePosition().y + _camera_y - card_dims_y/2;
+                card_moving.x = mouse_position.x + _camera_x - card_dims_x/2;
+                card_moving.y = mouse_position.y + _camera_y - card_dims_y/2;
                 if (from_ground) {
                     cards_on_ground.push_back(card_moving);
                     updateCardSend(card_moving);
@@ -479,7 +488,7 @@ struct Client
 
     void render()
     {
-        rl::BeginDrawing();
+        rl::BeginTextureMode(render_tex);
             rl::ClearBackground(colorBg);
             fixDrawBackground();
 
@@ -510,7 +519,7 @@ struct Client
             for (int i = cards_on_hand.size()-1; i >= 0; i--)
             {
                 int render_card = cards_on_hand.size()-1-i;
-                if (rl::CheckCollisionPointRec(rl::GetMousePosition(), {(float)cards_on_hand[i].x, (float)cards_on_hand[i].y, card_dims_hand.x, card_dims_hand.y}) && hover_card == -1)
+                if (rl::CheckCollisionPointRec(mouse_position, {(float)cards_on_hand[i].x, (float)cards_on_hand[i].y, card_dims_hand.x, card_dims_hand.y}) && hover_card == -1)
                 {
                     if (rl::IsKeyPressed(rl::KEY_SPACE))
                         cards_on_hand[i].flipped = !cards_on_hand[i].flipped;
@@ -530,7 +539,7 @@ struct Client
             if (hover_card != -1)
                 drawCard(cards_on_hand[hover_card], rl::Vector2{(float)cards_on_hand[hover_card].x - (card_dims_hover.x-card_dims_hand.x)/2, (float)cards_on_hand[hover_card].y - (card_dims_hover.y-card_dims_hand.y)/2}, 1.7f);
             if (moving_card)
-                drawCard(card_moving, {rl::GetMousePosition().x - card_dims_drag.x/2, rl::GetMousePosition().y - card_dims_drag.y/2}, 1.3f);
+                drawCard(card_moving, {mouse_position.x - card_dims_drag.x/2, mouse_position.y - card_dims_drag.y/2}, 1.3f);
 
             std::string coordsText = std::to_string(ftint(_x/10.f)) + "; " + std::to_string(ftint(-_y/10.f));
             rl::DrawTextPro(font, coordsText.c_str(), {0,0}, {0,0}, 0, 30, 0, {255,255,255,255});
@@ -541,7 +550,13 @@ struct Client
                 rl::DrawTextPro(font2, typeMessage.c_str(), {WINW/2.f - msgTextSize.x/2, 50}, {0,0}, 0, 100, 0, {255,255,255,255});
                 rl::DrawRectangle(WINW/2.f + msgTextSize.x/2, 50 + msgTextSize.y - 20, 25, int(rl::GetTime()*5.0)%2 * 5.f, {255,255,255,200});
             }
-            
+        rl::EndTextureMode();
+
+        rl::BeginDrawing();
+        rl::ClearBackground({0,0,0,0});
+        rl::DrawTexturePro(render_tex.texture, 
+                           {0, 0, (float)render_tex.texture.width, (float)-render_tex.texture.height},
+                           {0,0,(float)SCREENW,(float)SCREENH}, {0,0}, 0, {255,255,255,255});
         rl::EndDrawing();
     }
 };

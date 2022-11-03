@@ -6,7 +6,7 @@
 
 #define Log(x) std::cout << x << std::endl
 #define Lognl(x) std::cout << std::endl << x << std::endl
-#define WINW 1200
+#define WINW 1600
 #define WINH 900
 #define SPRITE_SCALE 4
 

@@ -1,4 +1,25 @@
-#include "Textures.hpp"
+#include "GlobalsClient.hpp"
+
+int SCREENW = 0;
+int SCREENH = 0;
+
+std::ostream& operator<<(std::ostream& stream, const rl::Vector2& vec2)
+{
+    stream << (int)vec2.x << "; " << (int)vec2.y;
+    return stream;
+}
+
+rl::Vector2 operator*(rl::Vector2 vec2, const float multiplier)
+{
+    return {vec2.x * multiplier, vec2.y * multiplier};
+}
+
+void changeWindowSize(int newWidth, int newHeight) {
+    rl::SetWindowPosition(0,0);
+    rl::SetWindowSize(newWidth, newHeight);
+    SCREENW = newWidth;
+    SCREENH = newHeight;
+}
 
 rl::Texture2D TEX_DESERT;
 
@@ -32,6 +53,5 @@ void loadTextures() {
     TEX_RATS[5] = TEX_SS_RAT5;
     TEX_RATS[6] = TEX_SS_RATDREAM;
 
-    //TEX_CARDS_SHEET = rl::LoadTexture("assets/card_deck.png");
     TEX_CARDS_SHEET = rl::LoadTexture("assets/card_deck.png");
 }
