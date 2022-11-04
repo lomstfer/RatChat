@@ -48,13 +48,13 @@ rl::Texture2D TEX_CARDS_SHEET;
 
 void loadTextures() {
     TEX_DESERT = rl::LoadTexture("assets/desert.png");
-    TEX_SS_RAT0 = rl::LoadTexture("assets/Dream Rats/Dream Rat 0.png");
-    TEX_SS_RAT1 = rl::LoadTexture("assets/Dream Rats/Dream Rat 1.png");
-    TEX_SS_RAT2 = rl::LoadTexture("assets/Dream Rats/Dream Rat 2.png");
-    TEX_SS_RAT3 = rl::LoadTexture("assets/Dream Rats/Dream Rat 3.png");
-    TEX_SS_RAT4 = rl::LoadTexture("assets/Dream Rats/Dream Rat 4.png");
-    TEX_SS_RAT5 = rl::LoadTexture("assets/Dream Rats/Dream Rat 5.png");
-    TEX_SS_RATDREAM = rl::LoadTexture("assets/Dream Rats/Dream Rat Rare.png");
+    TEX_SS_RAT0 = rl::LoadTexture("assets/Rats/Dream Rat 0.png");
+    TEX_SS_RAT1 = rl::LoadTexture("assets/Rats/Dream Rat 1.png");
+    TEX_SS_RAT2 = rl::LoadTexture("assets/Rats/Dream Rat 2.png");
+    TEX_SS_RAT3 = rl::LoadTexture("assets/Rats/Dream Rat 3.png");
+    TEX_SS_RAT4 = rl::LoadTexture("assets/Rats/Dream Rat 4.png");
+    TEX_SS_RAT5 = rl::LoadTexture("assets/Rats/Dream Rat 5.png");
+    TEX_SS_RATDREAM = rl::LoadTexture("assets/Rats/Dream Rat Rare.png");
     TEX_RATS[0] = TEX_SS_RAT0;
     TEX_RATS[1] = TEX_SS_RAT1;
     TEX_RATS[2] = TEX_SS_RAT2;
