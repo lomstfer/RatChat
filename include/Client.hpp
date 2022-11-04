@@ -38,7 +38,7 @@ struct Client
             }
         }
 
-        _ratType = rand()%7;
+        _ratType = rand()%6 + (rand()%10+1)/10;
         ratSheet = SpriteSheet(TEX_RATS[_ratType], 8, SPRITE_SCALE, 12, {12,7});
         _camera_x = -GAMEW/2.f + ratSheet.frameWidth/2.f;
         _camera_y = -GAMEH/2.f + ratSheet.frameHeight/2.f;
@@ -221,11 +221,18 @@ struct Client
             _pressed = false;
         }
 
-        bool left = rl::IsKeyDown(rl::KEY_LEFT);
-        bool right = rl::IsKeyDown(rl::KEY_RIGHT);
-        bool up = rl::IsKeyDown(rl::KEY_UP);
-        bool down = rl::IsKeyDown(rl::KEY_DOWN);
-
+        bool left = false;
+        bool right = false;
+        bool up = false;
+        bool down = false;
+        if (!isTypingMessage)
+        {
+            left = rl::IsKeyDown(rl::KEY_LEFT) || rl::IsKeyDown(rl::KEY_A);
+            right = rl::IsKeyDown(rl::KEY_RIGHT) || rl::IsKeyDown(rl::KEY_D);
+            up = rl::IsKeyDown(rl::KEY_UP) || rl::IsKeyDown(rl::KEY_W);
+            down = rl::IsKeyDown(rl::KEY_DOWN) || rl::IsKeyDown(rl::KEY_S);
+        }
+        
         if (left)
         {
             _pressed = true;
@@ -342,7 +349,7 @@ struct Client
             for (int i = cards_on_ground.size() - 1; i >= 0; i--)
             {
                 if (rl::CheckCollisionPointRec(mouse_position, {(float)cards_on_ground[i].x - _camera_x, (float)cards_on_ground[i].y - _camera_y, card_dims_x, card_dims_y}) 
-                    /* && rl::CheckCollisionRecs({_x-4*SPRITE_SCALE, _y-4*SPRITE_SCALE, (float)ratSheet.frameWidth+2*SPRITE_SCALE, (float)ratSheet.frameHeight+2*SPRITE_SCALE}, {(float)cards_on_ground[i].x, (float)cards_on_ground[i].y, card_dims_x, card_dims_y}) */)
+                    && rl::CheckCollisionRecs({_x-4*SPRITE_SCALE, _y-4*SPRITE_SCALE, (float)ratSheet.frameWidth+2*SPRITE_SCALE, (float)ratSheet.frameHeight+2*SPRITE_SCALE}, {(float)cards_on_ground[i].x, (float)cards_on_ground[i].y, card_dims_x, card_dims_y}))
                 {
                     card_moving = cards_on_ground[i];
                     cards_on_ground.erase(cards_on_ground.begin() + i);
@@ -368,8 +375,8 @@ struct Client
             // place on ground
             else if (mouse_position.y <= GAMEH-card_dims_hand.y-50)
             {
-                card_moving.x = mouse_position.x + _camera_x - card_dims_x/2;
-                card_moving.y = mouse_position.y + _camera_y - card_dims_y/2;
+                card_moving.x = _x/* mouse_position.x + _camera_x */ - card_dims_x/2;
+                card_moving.y = _y/* mouse_position.y + _camera_y */ - card_dims_y/2;
                 if (from_ground) {
                     cards_on_ground.push_back(card_moving);
                     updateCardSend(card_moving);
@@ -433,7 +440,8 @@ struct Client
         {
             for (int i = cards_on_ground.size() - 1; i >= 0; i--)
             {
-                if (rl::CheckCollisionRecs({_x-4*SPRITE_SCALE, _y-4*SPRITE_SCALE, (float)ratSheet.frameWidth+2*SPRITE_SCALE, (float)ratSheet.frameHeight+2*SPRITE_SCALE}, {(float)cards_on_ground[i].x, (float)cards_on_ground[i].y, card_dims_x, card_dims_y}))
+                if (rl::CheckCollisionRecs({_x-4*SPRITE_SCALE, _y-4*SPRITE_SCALE, (float)ratSheet.frameWidth+2*SPRITE_SCALE, (float)ratSheet.frameHeight+2*SPRITE_SCALE}, {(float)cards_on_ground[i].x, (float)cards_on_ground[i].y, card_dims_x, card_dims_y})
+                    && rl::CheckCollisionPointRec(mouse_position, {(float)cards_on_ground[i].x - _camera_x, (float)cards_on_ground[i].y - _camera_y, card_dims_x, card_dims_y}))
                 {
                     fb_builder.Clear();
                     auto card = GS::CreatePlayingCard(fb_builder, FLAG_PLAYINGCARD_DATA, FLAG_PLAYINGCARD_UPDATE, cards_on_ground[i].unique_id, cards_on_ground[i].value, cards_on_ground[i].color, cards_on_ground[i].x, cards_on_ground[i].y, !cards_on_ground[i].flipped);
@@ -535,12 +543,12 @@ struct Client
                 {
                     rl::Vector2 pDrawPos = {_x - _camera_x, _y - _camera_y};
                     ratSheet.draw({pDrawPos.x, pDrawPos.y}, _rotation);
-                    rl::DrawTextPro(font2, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 60}, {0,0}, 0, 35, 0, {255,255,255,255});
+                    rl::DrawTextPro(font2, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 60}, {0,0}, 0, 35, 0, {0,0,0,255});
                     continue;
                 }
                 rl::Vector2 pDrawPos = {players_show[i].x - _camera_x, players_show[i].y - _camera_y};
                 drawSheetFrame(TEX_RATS[players_show[i].rat_type], players_show[i].frame, ratSheet.frameWidth, ratSheet.frameHeight, pDrawPos, players_show[i].rotation, ratSheet.scale, ratSheet.origin);
-                rl::DrawTextPro(font2, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 60}, {0,0}, 0, 35, 0, {255,255,255,255});
+                rl::DrawTextPro(font2, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 60}, {0,0}, 0, 35, 0, {0,0,0,255});
             }
 
             // cards on hand
@@ -575,14 +583,14 @@ struct Client
             if (moving_card)
                 drawCard(card_moving, {mouse_position.x - card_dims_drag.x/2, mouse_position.y - card_dims_drag.y/2}, 1.3f);
 
-            std::string coordsText = std::to_string(ftint(_x/10.f)) + "; " + std::to_string(ftint(-_y/10.f));
-            rl::DrawTextPro(font, coordsText.c_str(), {0,0}, {0,0}, 0, 30, 0, {255,255,255,255});
+            std::string coordsText = std::to_string(ftint(_x/20)) + "; " + std::to_string(ftint(-_y/20));
+            rl::DrawTextPro(font, coordsText.c_str(), {0,0}, {0,0}, 0, 40, 0, {0,0,0,245});
 
             if (isTypingMessage)
             {
                 rl::Vector2 msgTextSize = rl::MeasureTextEx(font2, typeMessage.c_str(), 100, 0);
-                rl::DrawTextPro(font2, typeMessage.c_str(), {GAMEW/2.f - msgTextSize.x/2, 50}, {0,0}, 0, 100, 0, {255,255,255,255});
-                rl::DrawRectangle(GAMEW/2.f + msgTextSize.x/2, 50 + msgTextSize.y - 20, 25, int(rl::GetTime()*5.0)%2 * 5.f, {255,255,255,200});
+                rl::DrawTextPro(font2, typeMessage.c_str(), {GAMEW/2.f - msgTextSize.x/2, 50}, {0,0}, 0, 100, 0, {0,0,0,255});
+                rl::DrawRectangle(GAMEW/2.f + msgTextSize.x/2, 50 + msgTextSize.y - 20, 25, int(rl::GetTime()*5.0)%2 * 5.f, {0,0,0,240});
             }
         rl::EndTextureMode();
 
