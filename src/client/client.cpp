@@ -7,7 +7,7 @@ int main()
     changeWindowSize(haveMonitorWidth*0.8f, haveMonitorHeight*0.8f);
 
     loadTextures();
-    Client client("192.168.0.113");
+    Client client("188.150.115.196");
 
     bool running = true;
     while (running)

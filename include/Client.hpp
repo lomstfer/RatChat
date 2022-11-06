@@ -18,7 +18,7 @@ struct Client
         if (client == NULL)
             Log("error: create client");
         enet_address_set_host(&address, ip_address);
-        address.port = 365;
+        address.port = 25565;
         host = enet_host_connect(client, &address, 1, 0);
         if (host == NULL)
             Log("error: connecting to host");

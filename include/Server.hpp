@@ -14,7 +14,7 @@ struct Server
             Log("error: init enet");
         atexit(enet_deinitialize);
         address.host = ENET_HOST_ANY;
-        address.port = 365;
+        address.port = 25565;
         host = enet_host_create(&address, 32, 1, 0, 0);
         if (host == NULL)
             Log("error: create server");
