@@ -10,7 +10,7 @@
 struct Client
 {
     Client() = default;
-    Client(const char* ip_address, int port = 25565)
+    Client(const char* ip_address, int port)
     {
         if (enet_initialize() != 0)
             Log("error: init enet");

@@ -1,6 +1,9 @@
 #include "Client.hpp"
 #include "Menu.hpp"
 
+#define DEFAULT_IP "192.168.194.68"
+#define DEFAULT_PORT 25565
+
 int main()
 {
     rl::SetConfigFlags(rl::FLAG_VSYNC_HINT);
@@ -17,10 +20,8 @@ int main()
     }
 
     Client client;
-    if (menu.customIP.length() > 0)
-        client = Client(menu.customIP.c_str());
-    else
-        client = Client("192.168.194.68");
+    client = Client(menu.customIP.length() == 0 ? DEFAULT_IP : menu.customIP.c_str(), 
+                    menu.customPort.length() == 0 ? DEFAULT_PORT : std::stoi(menu.customPort));
 
     bool in = true;
     while (in)

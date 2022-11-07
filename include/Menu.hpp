@@ -13,7 +13,7 @@ public:
 
     std::string customIP = "";
     rl::Vector2 ipPos = {50,20};
-    std::string customPort = "25565";
+    std::string customPort = "";
     rl::Vector2 portPos = {50,70};
 
     int connectButtonWidth = 400;
@@ -89,7 +89,10 @@ public:
         {
             rl::DrawRectangle(10,10,300,100,{40,40,40,255});
             rl::Vector2 textSize = rl::MeasureTextEx(font, customIP.c_str(), 40, 0);
-            rl::DrawTextPro(font, customIP.c_str(), ipPos, {0,0}, 0, 40, 0, {255,255,255,255});
+            if (customIP.length() > 0)
+                rl::DrawTextPro(font, customIP.c_str(), ipPos, {0,0}, 0, 40, 0, {255,255,255,255});
+            else
+                rl::DrawTextPro(font, "default ip", ipPos, {0,0}, 0, 40, 0, {255,255,255,255});
             if (state == GET_IP)
             {
                 rl::DrawRectangle(ipPos.x + textSize.x, ipPos.y + textSize.y, 25, int(rl::GetTime()*5.0)%2 * 5.f, {255,255,255,255});
@@ -97,7 +100,10 @@ public:
             }
 
             textSize = rl::MeasureTextEx(font, customPort.c_str(), 40, 0);
-            rl::DrawTextPro(font, customPort.c_str(), {50, 70}, {0,0}, 0, 40, 0, {255,255,255,255});
+            if (customPort.length())
+                rl::DrawTextPro(font, customPort.c_str(), {50, 70}, {0,0}, 0, 40, 0, {255,255,255,255});
+            else
+                rl::DrawTextPro(font, "default port", {50, 70}, {0,0}, 0, 40, 0, {255,255,255,255});
             if (state == GET_PORT)
             {
                 rl::DrawRectangle(portPos.x + textSize.x, portPos.y + textSize.y, 25, int(rl::GetTime()*5.0)%2 * 5.f, {255,255,255,255});
