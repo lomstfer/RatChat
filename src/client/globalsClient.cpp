@@ -31,6 +31,9 @@ void setScreenVars(int width, int height)
     }
 }
 
+rl::Font font;
+rl::Font font2;
+
 rl::Texture2D TEX_DESERT;
 
 rl::Texture2D TEX_SS_RAT;
@@ -47,6 +50,9 @@ rl::Texture2D TEX_CARDS[14];
 rl::Texture2D TEX_CARDS_SHEET;
 
 void loadTextures() {
+    font = rl::LoadFont("assets/UbuntuCondensed-Regular.ttf");
+    font2 = rl::LoadFont("assets/NanumPenScript-Regular.ttf");
+
     TEX_DESERT = rl::LoadTexture("assets/desert.png");
     TEX_SS_RAT0 = rl::LoadTexture("assets/Rats/Dream Rat 0.png");
     TEX_SS_RAT1 = rl::LoadTexture("assets/Rats/Dream Rat 1.png");

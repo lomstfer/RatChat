@@ -20,6 +20,9 @@ extern int SCREENH;
 #define RAT_WIDTH 24
 #define RAT_HEIGHT 24
 
+extern rl::Font font;
+extern rl::Font font2;
+
 extern rl::Texture2D TEX_DESERT;
 
 extern rl::Texture2D TEX_SS_RAT0;

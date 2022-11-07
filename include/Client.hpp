@@ -9,7 +9,8 @@
 
 struct Client
 {
-    Client(const char* ip_address)
+    Client() = default;
+    Client(const char* ip_address, int port = 25565)
     {
         if (enet_initialize() != 0)
             Log("error: init enet");
@@ -18,13 +19,11 @@ struct Client
         if (client == NULL)
             Log("error: create client");
         enet_address_set_host(&address, ip_address);
-        address.port = 25565;
+        address.port = port;
         host = enet_host_connect(client, &address, 1, 0);
         if (host == NULL)
             Log("error: connecting to host");
         fb_builder = flatbuffers::FlatBufferBuilder(1024);
-        font = rl::LoadFont("assets/UbuntuCondensed-Regular.ttf");
-        font2 = rl::LoadFont("assets/NanumPenScript-Regular.ttf");
 
         render_tex = rl::LoadRenderTexture(GAMEW, GAMEH);
 
@@ -61,8 +60,6 @@ struct Client
 
     flatbuffers::FlatBufferBuilder fb_builder;
 
-    rl::Font font;
-    rl::Font font2;
     rl::Texture2D bgTexture;
     rl::Vector2 bgSize;
 
