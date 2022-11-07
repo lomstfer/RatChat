@@ -18,7 +18,8 @@ public:
 
     int connectButtonWidth = 400;
     int connectButtonHeight = 100;
-    rl::Rectangle connectButtonRect = {GAMEW/2 - connectButtonWidth/2, GAMEH/2 - connectButtonHeight/2, connectButtonWidth, connectButtonHeight};
+    rl::Rectangle connectButtonRect = {GAMEW/2.f - connectButtonWidth/2, GAMEH/2.f - connectButtonHeight/2, (float)connectButtonWidth, (float)connectButtonHeight};
+    rl::Color connectButtonColor = {100,150,100,255};
 
     enum states {
         STATE_NONE,
@@ -30,6 +31,7 @@ public:
 
     void update()
     {
+        switchState();
         switch (state)
         {
         case STATE_NONE:
@@ -44,17 +46,21 @@ public:
         case GET_IP:
             getIPInput();
 
+            if (rl::IsKeyPressed(rl::KEY_ESCAPE))
+                state = STATE_NONE;
             if (rl::IsKeyPressed(rl::KEY_DOWN))
                 state = GET_PORT;
             if (rl::IsKeyPressed(rl::KEY_ENTER))
                 state = GET_PORT;
-
+            
             render();
             break;
 
         case GET_PORT:
             getPortInput();
 
+            if (rl::IsKeyPressed(rl::KEY_ESCAPE))
+                state = STATE_NONE;
             if (rl::IsKeyPressed(rl::KEY_UP))
                 state = GET_IP;
             if (rl::IsKeyPressed(rl::KEY_ENTER))
@@ -76,24 +82,32 @@ public:
         rl::BeginDrawing();
         rl::ClearBackground({20,20,20,255});
 
-        rl::DrawRectangle(connectButtonRect.x, connectButtonRect.y, connectButtonRect.width, connectButtonRect.height, {100,150,100,255});
+        rl::DrawRectangle(connectButtonRect.x, connectButtonRect.y, connectButtonRect.width, connectButtonRect.height, connectButtonColor);
+        rl::DrawTextPro(font, "connect", {connectButtonRect.x, connectButtonRect.y}, {0,0}, 0, 40, 0, {255,255,255,255});
 
-        rl::Vector2 textSize = rl::MeasureTextEx(font, customIP.c_str(), 40, 0);
-        rl::DrawTextPro(font, customIP.c_str(), ipPos, {0,0}, 0, 40, 0, {255,255,255,255});
-        if (state == GET_IP)
+        if (state != STATE_NONE)
         {
-            rl::DrawRectangle(ipPos.x + textSize.x, ipPos.y + textSize.y, 25, int(rl::GetTime()*5.0)%2 * 5.f, {255,255,255,255});
-            rl::DrawRectangle(ipPos.x - 30, ipPos.y + textSize.y/2, 20, 3, {255,255,255,255});
-        }
+            rl::DrawRectangle(10,10,300,100,{40,40,40,255});
+            rl::Vector2 textSize = rl::MeasureTextEx(font, customIP.c_str(), 40, 0);
+            rl::DrawTextPro(font, customIP.c_str(), ipPos, {0,0}, 0, 40, 0, {255,255,255,255});
+            if (state == GET_IP)
+            {
+                rl::DrawRectangle(ipPos.x + textSize.x, ipPos.y + textSize.y, 25, int(rl::GetTime()*5.0)%2 * 5.f, {255,255,255,255});
+                rl::DrawRectangle(ipPos.x - 30, ipPos.y + textSize.y/2, 20, 3, {255,255,255,255});
+            }
 
-        textSize = rl::MeasureTextEx(font, customPort.c_str(), 40, 0);
-        rl::DrawTextPro(font, customPort.c_str(), {50, 70}, {0,0}, 0, 40, 0, {255,255,255,255});
-        if (state == GET_PORT)
-        {
-            rl::DrawRectangle(portPos.x + textSize.x, portPos.y + textSize.y, 25, int(rl::GetTime()*5.0)%2 * 5.f, {255,255,255,255});
-            rl::DrawRectangle(portPos.x - 30, portPos.y + textSize.y/2, 20, 3, {255,255,255,255});
+            textSize = rl::MeasureTextEx(font, customPort.c_str(), 40, 0);
+            rl::DrawTextPro(font, customPort.c_str(), {50, 70}, {0,0}, 0, 40, 0, {255,255,255,255});
+            if (state == GET_PORT)
+            {
+                rl::DrawRectangle(portPos.x + textSize.x, portPos.y + textSize.y, 25, int(rl::GetTime()*5.0)%2 * 5.f, {255,255,255,255});
+                rl::DrawRectangle(portPos.x - 30, portPos.y + textSize.y/2, 20, 3, {255,255,255,255});
+            }
         }
-
+        else {
+            rl::DrawTextPro(font, "<escape> for settings", {10, 10}, {0,0}, 0, 20, 0, {255,255,255,255});
+        }
+        
         rl::EndDrawing();
     }
 
@@ -141,8 +155,19 @@ public:
     {
         rl::Vector2 mouse_pos = rl::GetMousePosition() * ((float)GAMEW/SCREENW);
 
-        /* if (rl::IsMouseButtonPressed(rl::MOUSE_BUTTON_LEFT) &&
-            rl::CheckCollisionPointRec(mouse_pos, {})) */
+        bool hover = false;
+        if (rl::CheckCollisionPointRec(mouse_pos, connectButtonRect))
+        {
+            connectButtonColor = {100,150,100,200};
+            hover = true;
+        }
+        else
+            connectButtonColor = {100,150,100,255};
+
+        if (rl::IsMouseButtonPressed(rl::MOUSE_BUTTON_LEFT) && hover)
+        {
+            connect = true;
+        }
     }
 
 };
