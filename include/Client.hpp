@@ -50,6 +50,11 @@ struct Client
             }
         }
     }
+    ~Client()
+    {
+        rl::UnloadRenderTexture(render_tex);
+        enet_host_destroy(client);
+    }
 
     rl::RenderTexture2D render_tex;
 
@@ -582,6 +587,8 @@ struct Client
 
             std::string coordsText = std::to_string(ftint(_x/20)) + "; " + std::to_string(ftint(-_y/20));
             rl::DrawTextPro(font, coordsText.c_str(), {0,0}, {0,0}, 0, 40, 0, {0,0,0,245});
+
+            rl::DrawTextPro(font, currentDateTime().c_str(), {GAMEW-100,0}, {0,0}, 0, 15, 0, {0,0,0,245});
 
             if (isTypingMessage)
             {

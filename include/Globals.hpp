@@ -3,9 +3,14 @@
 
 #include <string>
 #include <iostream>
+#include <time.h>
 
 #define Log(x) std::cout << x << std::endl
 #define Lognl(x) std::cout << std::endl << x << std::endl
+
+#define DEFAULT_IP "192.168.56.1"
+#define DEFAULT_PORT 25565
+
 #define GAMEW 1600
 #define GAMEH 900
 #define SPRITE_SCALE 4
@@ -74,6 +79,19 @@ int clamp(int num, int lower, int higher)
 float lerp(float v0, float v1, float t) 
 {
     return v0 + t * (v1 - v0);
+}
+
+// Get current date/time, format is YYYY-MM-DD.HH:mm:ss
+const std::string currentDateTime() {
+    time_t     now = time(0);
+    struct tm  tstruct;
+    char       buf[80];
+    tstruct = *localtime(&now);
+    // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+    // for more information about date/time format
+    strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+
+    return buf;
 }
 
 #endif

@@ -7,9 +7,16 @@ class Menu
 public:
     Menu()
     {
+        rendTarg = rl::LoadRenderTexture(GAMEW, GAMEH);
+    }
+    ~Menu()
+    {
+        rl::UnloadRenderTexture(rendTarg);
     }
 
     bool connect = false;
+
+    rl::RenderTexture2D rendTarg;
 
     std::string customIP = "";
     rl::Vector2 ipPos = {50,20};
@@ -48,7 +55,7 @@ public:
 
             if (rl::IsKeyPressed(rl::KEY_ESCAPE))
                 state = STATE_NONE;
-            if (rl::IsKeyPressed(rl::KEY_DOWN))
+            if (rl::IsKeyPressed(rl::KEY_DOWN) || rl::IsKeyPressed(rl::KEY_TAB))
                 state = GET_PORT;
             if (rl::IsKeyPressed(rl::KEY_ENTER))
                 state = GET_PORT;
@@ -61,7 +68,7 @@ public:
 
             if (rl::IsKeyPressed(rl::KEY_ESCAPE))
                 state = STATE_NONE;
-            if (rl::IsKeyPressed(rl::KEY_UP))
+            if (rl::IsKeyPressed(rl::KEY_UP) || rl::IsKeyPressed(rl::KEY_TAB))
                 state = GET_IP;
             if (rl::IsKeyPressed(rl::KEY_ENTER))
                 state = STATE_NONE;
@@ -79,7 +86,7 @@ public:
 
     void render()
     {
-        rl::BeginDrawing();
+        rl::BeginTextureMode(rendTarg);
         rl::ClearBackground({20,20,20,255});
 
         rl::DrawRectangle(connectButtonRect.x, connectButtonRect.y, connectButtonRect.width, connectButtonRect.height, connectButtonColor);
@@ -87,12 +94,12 @@ public:
 
         if (state != STATE_NONE)
         {
-            rl::DrawRectangle(10,10,300,100,{40,40,40,255});
+            rl::DrawRectangle(10,10,300,150,{40,40,40,255});
             rl::Vector2 textSize = rl::MeasureTextEx(font, customIP.c_str(), 40, 0);
             if (customIP.length() > 0)
                 rl::DrawTextPro(font, customIP.c_str(), ipPos, {0,0}, 0, 40, 0, {255,255,255,255});
             else
-                rl::DrawTextPro(font, "default ip", ipPos, {0,0}, 0, 40, 0, {255,255,255,255});
+                rl::DrawTextPro(font, "default ip", ipPos, {0,0}, 0, 40, 0, {100,100,100,255});
             if (state == GET_IP)
             {
                 rl::DrawRectangle(ipPos.x + textSize.x, ipPos.y + textSize.y, 25, int(rl::GetTime()*5.0)%2 * 5.f, {255,255,255,255});
@@ -103,7 +110,7 @@ public:
             if (customPort.length())
                 rl::DrawTextPro(font, customPort.c_str(), {50, 70}, {0,0}, 0, 40, 0, {255,255,255,255});
             else
-                rl::DrawTextPro(font, "default port", {50, 70}, {0,0}, 0, 40, 0, {255,255,255,255});
+                rl::DrawTextPro(font, "default port", {50, 70}, {0,0}, 0, 40, 0, {100,100,100,255});
             if (state == GET_PORT)
             {
                 rl::DrawRectangle(portPos.x + textSize.x, portPos.y + textSize.y, 25, int(rl::GetTime()*5.0)%2 * 5.f, {255,255,255,255});
@@ -111,9 +118,17 @@ public:
             }
         }
         else {
-            rl::DrawTextPro(font, "<escape> for settings", {10, 10}, {0,0}, 0, 20, 0, {255,255,255,255});
+            rl::DrawTextPro(font, "<esc> | settings", {10, 10}, {0,0}, 0, 25, 0, {255,255,255,255});
+            rl::DrawTextPro(font, "<F11> | toggle fullscreen", {10, 40}, {0,0}, 0, 25, 0, {255,255,255,255});
         }
         
+        rl::EndTextureMode();
+
+        rl::BeginDrawing();
+        rl::ClearBackground({0,0,0,0});
+        rl::DrawTexturePro(rendTarg.texture, 
+                           {0, 0, (float)rendTarg.texture.width, (float)-rendTarg.texture.height},
+                           {0,0,(float)SCREENW,(float)SCREENH}, {0,0}, 0, {255,255,255,255});
         rl::EndDrawing();
     }
 

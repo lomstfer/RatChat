@@ -1,9 +1,6 @@
 #include "Client.hpp"
 #include "Menu.hpp"
 
-#define DEFAULT_IP "192.168.194.68"
-#define DEFAULT_PORT 25565
-
 int main()
 {
     rl::SetConfigFlags(rl::FLAG_VSYNC_HINT);
@@ -13,32 +10,48 @@ int main()
 
     loadTextures();
 
-    Menu menu = Menu();
-    while (!menu.connect)
+    while (true)
     {
-        menu.update();
-    }
-
-    Client client;
-    client = Client(menu.customIP.length() == 0 ? DEFAULT_IP : menu.customIP.c_str(), 
-                    menu.customPort.length() == 0 ? DEFAULT_PORT : std::stoi(menu.customPort));
-
-    bool in = true;
-    while (in)
-    {
-        if (rl::IsKeyPressed(rl::KEY_F11))
+        Menu menu = Menu();
+        while (!menu.connect)
         {
-            bool wasFullscreen = rl::IsWindowFullscreen();
-            if (!wasFullscreen)
-                changeWindowSize(haveMonitorWidth, haveMonitorHeight);
-            rl::ToggleFullscreen();
-            if (wasFullscreen)
-                changeWindowSize(haveMonitorWidth*0.8f, haveMonitorHeight*0.8f);
+            if (rl::IsKeyPressed(rl::KEY_F11))
+            {
+                bool wasFullscreen = rl::IsWindowFullscreen();
+                if (!wasFullscreen)
+                    changeWindowSize(haveMonitorWidth, haveMonitorHeight);
+                rl::ToggleFullscreen();
+                if (wasFullscreen)
+                    changeWindowSize(haveMonitorWidth*0.8f, haveMonitorHeight*0.8f);
+            }
+            menu.update();
+            if (rl::WindowShouldClose())
+                goto EXIT;
         }
-        
-        client.update();
+
+        Client client(menu.customIP.length() == 0 ? DEFAULT_IP : menu.customIP.c_str(), 
+                        menu.customPort.length() == 0 ? DEFAULT_PORT : std::stoi(menu.customPort));
+        while (true)
+        {
+            if (rl::IsKeyPressed(rl::KEY_F11))
+            {
+                bool wasFullscreen = rl::IsWindowFullscreen();
+                if (!wasFullscreen)
+                    changeWindowSize(haveMonitorWidth, haveMonitorHeight);
+                rl::ToggleFullscreen();
+                if (wasFullscreen)
+                    changeWindowSize(haveMonitorWidth*0.8f, haveMonitorHeight*0.8f);
+            }
+            
+            client.update();
+            if (rl::IsKeyPressed(rl::KEY_ESCAPE))
+                break;
+            if (rl::WindowShouldClose())
+                goto EXIT;
+        }
         if (rl::WindowShouldClose())
-            in = false;
+            break;
     }
+    EXIT:
     rl::CloseWindow();
 }
