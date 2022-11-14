@@ -91,7 +91,10 @@ public:
 
         rl::DrawRectangle(connectButtonRect.x, connectButtonRect.y, connectButtonRect.width, connectButtonRect.height, connectButtonColor);
         if (!connect)
-            rl::DrawTextPro(font, "connect", {connectButtonRect.x, connectButtonRect.y}, {0,0}, 0, 40, 0, {255,255,255,255});
+        {
+            rl::Vector2 connectingTextSize = rl::MeasureTextEx(font, "Connect", 50, 0);
+            rl::DrawTextPro(font, "Connect", {GAMEW/2 - connectingTextSize.x/2, GAMEH/2 - connectingTextSize.y/2}, {0,0}, 0, 50, 0, {255,255,255,255});
+        }
         if (connect)
         {
             connectRender();
