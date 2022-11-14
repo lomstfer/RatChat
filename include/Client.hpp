@@ -86,7 +86,7 @@ struct Client
     rl::Vector2 card_dims_hand = {card_dims_x * 1.5f, card_dims_y * 1.5f};
     rl::Vector2 card_dims_hover = {card_dims_x * 1.7f, card_dims_y * 1.7f};
     rl::Vector2 card_dims_drag = {card_dims_x * 1.3f, card_dims_y * 1.3f};
-    float cards_on_hand_space = card_dims_hand.x/1.5f;
+    float cards_on_hand_space = card_dims_hand.x;
     int cards_id_increment = 0;
     PlayingCard card_moving;
     bool moving_card = false;
@@ -117,6 +117,11 @@ struct Client
 
     rl::Vector2 mouse_position;
 
+    rl::Rectangle eraseHandButton = {10, 50, 30, 30};
+    rl::Color eraseHandButtonColor = {200,200,200,255};
+
+    bool isConnected = false;
+
     float dt;
     void update()
     {
@@ -128,10 +133,11 @@ struct Client
         {
             switch (event.type)
             {
-                case ENET_EVENT_TYPE_CONNECT:
+                /* case ENET_EVENT_TYPE_CONNECT:
+                    isConnected = true;
                     _id = event.peer->outgoingPeerID;
                     send_now = true;
-                    break;
+                    break; */
                 case ENET_EVENT_TYPE_RECEIVE:
                     getGameStateInfo(event.packet->data);
                     enet_packet_destroy(event.packet);
@@ -150,6 +156,40 @@ struct Client
         interpolatePlayers();
 
         render();
+    }
+
+    void cardsOnHandUpdate()
+    {
+        if (rl::CheckCollisionPointRec(mouse_position, eraseHandButton))
+        {
+            eraseHandButtonColor = {150,150,150,255};
+            rl::Vector2 measure = rl::MeasureTextEx(font, "- erase cards on hand", 30, 0);
+            rl::DrawTextPro(font, "- erase cards on hand", {eraseHandButton.x + eraseHandButton.width + 10, eraseHandButton.y + eraseHandButton.height/2 - measure.y/2}, {0,0}, 0, 30, 0, {0,0,0,255});
+            if (rl::IsMouseButtonPressed(rl::MOUSE_BUTTON_LEFT))
+            {
+                cards_on_hand.clear();
+            }
+        }
+        else
+        {
+            eraseHandButtonColor = {200,200,200,255};;
+        }
+        rl::DrawRectangle(eraseHandButton.x, eraseHandButton.y, eraseHandButton.width, eraseHandButton.height, eraseHandButtonColor);
+    }
+
+    void connectUpdate()
+    {
+        if (enet_host_service(client, &event, 0) > 0) 
+        {
+            switch (event.type)
+            {
+                case ENET_EVENT_TYPE_CONNECT:
+                    isConnected = true;
+                    _id = event.peer->outgoingPeerID;
+                    send_now = true;
+                    break;
+            }
+        }
     }
 
     void getGameStateInfo(const void* buf)
@@ -585,10 +625,11 @@ struct Client
             if (moving_card)
                 drawCard(card_moving, {mouse_position.x - card_dims_drag.x/2, mouse_position.y - card_dims_drag.y/2}, 1.3f);
 
+            // coordinates
             std::string coordsText = std::to_string(ftint(_x/20)) + "; " + std::to_string(ftint(-_y/20));
             rl::DrawTextPro(font, coordsText.c_str(), {0,0}, {0,0}, 0, 40, 0, {0,0,0,245});
 
-            rl::DrawTextPro(font, currentDateTime().c_str(), {GAMEW-100,0}, {0,0}, 0, 15, 0, {0,0,0,245});
+            cardsOnHandUpdate();
 
             if (isTypingMessage)
             {

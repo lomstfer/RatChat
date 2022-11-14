@@ -50,8 +50,8 @@ rl::Texture2D TEX_CARDS[14];
 rl::Texture2D TEX_CARDS_SHEET;
 
 void loadTextures() {
-    font = rl::LoadFont("assets/UbuntuCondensed-Regular.ttf");
-    font2 = rl::LoadFont("assets/NanumPenScript-Regular.ttf");
+    font = rl::LoadFontEx("assets/UbuntuCondensed-Regular.ttf", 128, 0, 250);
+    font2 = rl::LoadFontEx("assets/NanumPenScript-Regular.ttf", 128, 0, 250);
 
     TEX_DESERT = rl::LoadTexture("assets/desert.png");
     TEX_SS_RAT0 = rl::LoadTexture("assets/Rats/Dream Rat 0.png");

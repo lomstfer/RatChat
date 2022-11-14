@@ -90,8 +90,12 @@ public:
         rl::ClearBackground({20,20,20,255});
 
         rl::DrawRectangle(connectButtonRect.x, connectButtonRect.y, connectButtonRect.width, connectButtonRect.height, connectButtonColor);
-        rl::DrawTextPro(font, "connect", {connectButtonRect.x, connectButtonRect.y}, {0,0}, 0, 40, 0, {255,255,255,255});
-
+        if (!connect)
+            rl::DrawTextPro(font, "connect", {connectButtonRect.x, connectButtonRect.y}, {0,0}, 0, 40, 0, {255,255,255,255});
+        if (connect)
+        {
+            connectRender();
+        }
         if (state != STATE_NONE)
         {
             rl::DrawRectangle(10,10,300,150,{40,40,40,255});
@@ -130,6 +134,15 @@ public:
                            {0, 0, (float)rendTarg.texture.width, (float)-rendTarg.texture.height},
                            {0,0,(float)SCREENW,(float)SCREENH}, {0,0}, 0, {255,255,255,255});
         rl::EndDrawing();
+    }
+
+    void connectRender()
+    {
+        rl::Vector2 connectingTextSize = rl::MeasureTextEx(font, "Connecting", 50, 0);
+        rl::DrawTextPro(font, "Connecting", {GAMEW/2 - connectingTextSize.x/2, GAMEH/2 - connectingTextSize.y/2}, {0,0}, 0, 50, 0, {255,255,255,255});
+        rl::DrawRectangle(GAMEW/2.f + connectingTextSize.x/2 + 5 + 20, GAMEH/2 + connectingTextSize.y - 37, 5, int(rl::GetTime()*1.0)%2 * 5.f, {255,255,255,255});
+        rl::DrawRectangle(GAMEW/2.f + connectingTextSize.x/2 + 5 + 10, GAMEH/2 + connectingTextSize.y - 37, 5, int((rl::GetTime()+0.33)*1.0)%2 * 5.f, {255,255,255,255});
+        rl::DrawRectangle(GAMEW/2.f + connectingTextSize.x/2 + 5, GAMEH/2 + connectingTextSize.y - 37, 5, int((rl::GetTime()+0.66)*1.0)%2 * 5.f, {255,255,255,255});
     }
 
     void getIPInput()
@@ -174,10 +187,12 @@ public:
 
     void switchState()
     {
+        if (connect)
+            state = STATE_NONE;
         rl::Vector2 mouse_pos = rl::GetMousePosition() * ((float)GAMEW/SCREENW);
 
         bool hover = false;
-        if (rl::CheckCollisionPointRec(mouse_pos, connectButtonRect))
+        if (rl::CheckCollisionPointRec(mouse_pos, connectButtonRect) && !connect)
         {
             connectButtonColor = {100,150,100,200};
             hover = true;
@@ -190,6 +205,4 @@ public:
             connect = true;
         }
     }
-
 };
-
