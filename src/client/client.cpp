@@ -12,6 +12,7 @@ int main()
 
     while (true)
     {
+        // menu
         MENU:
         Menu menu = Menu();
         while (true)
@@ -35,6 +36,7 @@ int main()
         Client client(menu.customIP.length() == 0 ? DEFAULT_IP : menu.customIP.c_str(), 
                         menu.customPort.length() == 0 ? DEFAULT_PORT : std::stoi(menu.customPort));
         
+        // connecting
         while (!client.isConnected)
         {
             if (rl::IsKeyPressed(rl::KEY_F11))
@@ -56,6 +58,7 @@ int main()
                 goto EXIT;
         }
         
+        // in the game
         while (true)
         {
             if (rl::IsKeyPressed(rl::KEY_F11))
@@ -67,7 +70,7 @@ int main()
                 if (wasFullscreen)
                     changeWindowSize(haveMonitorWidth*0.8f, haveMonitorHeight*0.8f);
             }
-                
+            
             client.update();
             if (rl::IsKeyPressed(rl::KEY_ESCAPE))
                 break;
