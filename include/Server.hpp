@@ -7,14 +7,15 @@
 
 struct Server
 {
-    Server()
+    Server(int port)
     {
+        port = port == -1 ? 25565 : port;
         Log("server");
         if (enet_initialize() != 0)
             Log("error: init enet");
         atexit(enet_deinitialize);
         address.host = ENET_HOST_ANY;
-        address.port = 25565;
+        address.port = port;
         host = enet_host_create(&address, 32, 1, 0, 0);
         if (host == NULL)
             Log("error: create server");

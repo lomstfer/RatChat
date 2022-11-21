@@ -3,6 +3,8 @@
 int SCREENW = 0;
 int SCREENH = 0;
 
+float TEXT_SIZE = 1;
+
 std::ostream& operator<<(std::ostream& stream, const rl::Vector2& vec2)
 {
     stream << (int)vec2.x << "; " << (int)vec2.y;

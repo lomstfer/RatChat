@@ -28,6 +28,13 @@ public:
     rl::Rectangle connectButtonRect = {GAMEW/2.f - connectButtonWidth/2, GAMEH/2.f - connectButtonHeight/2, (float)connectButtonWidth, (float)connectButtonHeight};
     rl::Color connectButtonColor = {100,150,100,255};
 
+    
+    int TButtonsWidth = 100;
+    int TButtonsHeight = 50;
+    rl::Rectangle normalTButtonRect = {GAMEW/2.f - TButtonsWidth/2, GAMEH/2.f + 200 - TButtonsHeight/2, (float)TButtonsWidth, (float)TButtonsHeight};
+    rl::Rectangle smallTButtonRect = {GAMEW/2.f - 200 - TButtonsWidth/2, GAMEH/2.f + 200 - TButtonsHeight/2, (float)TButtonsWidth, (float)TButtonsHeight};
+    rl::Rectangle bigTButtonRect = {GAMEW/2.f + 200 - TButtonsWidth/2, GAMEH/2.f + 200 - TButtonsHeight/2, (float)TButtonsWidth, (float)TButtonsHeight};
+
     enum states {
         STATE_NONE,
         GET_IP,
@@ -36,17 +43,20 @@ public:
 
     int state = STATE_NONE;
 
+    float time = 0;
+
     void update()
     {
         switchState();
         switch (state)
         {
         case STATE_NONE:
-            if (rl::IsKeyPressed(rl::KEY_ESCAPE))
+            time += rl::GetFrameTime();
+            if (rl::IsKeyPressed(rl::KEY_ESCAPE) && time > 1)
                 state = GET_IP;
             if (rl::IsKeyPressed(rl::KEY_ENTER))
                 connect = true;
-
+            getTextSize();
             render();
             break;
 
@@ -87,13 +97,13 @@ public:
     void render()
     {
         rl::BeginTextureMode(rendTarg);
-        rl::ClearBackground({20,20,20,255});
+        rl::ClearBackground({22,22,22,255});
 
         rl::DrawRectangle(connectButtonRect.x, connectButtonRect.y, connectButtonRect.width, connectButtonRect.height, connectButtonColor);
         if (!connect)
         {
-            rl::Vector2 connectingTextSize = rl::MeasureTextEx(font, "Connect", 50, 0);
-            rl::DrawTextPro(font, "Connect", {GAMEW/2 - connectingTextSize.x/2, GAMEH/2 - connectingTextSize.y/2}, {0,0}, 0, 50, 0, {255,255,255,255});
+            rl::Vector2 connectingTextSize = rl::MeasureTextEx(font, "Connect", 50 * TEXT_SIZE, 0);
+            rl::DrawTextPro(font, "Connect", {GAMEW/2 - connectingTextSize.x/2, GAMEH/2 - connectingTextSize.y/2}, {0,0}, 0, 50 * TEXT_SIZE, 0, {255,255,255,255});
         }
         if (connect)
         {
@@ -102,22 +112,22 @@ public:
         if (state != STATE_NONE)
         {
             rl::DrawRectangle(10,10,300,150,{40,40,40,255});
-            rl::Vector2 textSize = rl::MeasureTextEx(font, customIP.c_str(), 40, 0);
+            rl::Vector2 textSize = rl::MeasureTextEx(font, customIP.c_str(), 40 * TEXT_SIZE, 0);
             if (customIP.length() > 0)
-                rl::DrawTextPro(font, customIP.c_str(), ipPos, {0,0}, 0, 40, 0, {255,255,255,255});
+                rl::DrawTextPro(font, customIP.c_str(), ipPos, {0,0}, 0, 40 * TEXT_SIZE, 0, {255,255,255,255});
             else
-                rl::DrawTextPro(font, "default ip", ipPos, {0,0}, 0, 40, 0, {100,100,100,255});
+                rl::DrawTextPro(font, "default ip", ipPos, {0,0}, 0, 40 * TEXT_SIZE, 0, {100,100,100,255});
             if (state == GET_IP)
             {
                 rl::DrawRectangle(ipPos.x + textSize.x, ipPos.y + textSize.y, 25, int(rl::GetTime()*5.0)%2 * 5.f, {255,255,255,255});
                 rl::DrawRectangle(ipPos.x - 30, ipPos.y + textSize.y/2, 20, 3, {255,255,255,255});
             }
 
-            textSize = rl::MeasureTextEx(font, customPort.c_str(), 40, 0);
+            textSize = rl::MeasureTextEx(font, customPort.c_str(), 40 * TEXT_SIZE, 0);
             if (customPort.length())
-                rl::DrawTextPro(font, customPort.c_str(), {50, 70}, {0,0}, 0, 40, 0, {255,255,255,255});
+                rl::DrawTextPro(font, customPort.c_str(), {50, 70}, {0,0}, 0, 40 * TEXT_SIZE, 0, {255,255,255,255});
             else
-                rl::DrawTextPro(font, "default port", {50, 70}, {0,0}, 0, 40, 0, {100,100,100,255});
+                rl::DrawTextPro(font, "default port", {50, 70}, {0,0}, 0, 40 * TEXT_SIZE, 0, {100,100,100,255});
             if (state == GET_PORT)
             {
                 rl::DrawRectangle(portPos.x + textSize.x, portPos.y + textSize.y, 25, int(rl::GetTime()*5.0)%2 * 5.f, {255,255,255,255});
@@ -125,9 +135,14 @@ public:
             }
         }
         else {
-            rl::DrawTextPro(font, "<esc> | settings", {10, 10}, {0,0}, 0, 25, 0, {255,255,255,255});
-            rl::DrawTextPro(font, "<F11> | toggle fullscreen", {10, 40}, {0,0}, 0, 25, 0, {255,255,255,255});
+            rl::DrawTextPro(font, "<esc> | server settings", {10, 10}, {0,0}, 0, 25 * TEXT_SIZE, 0, {255,255,255,255});
+            rl::DrawTextPro(font, "<F11> | toggle fullscreen", {10, 40}, {0,0}, 0, 25 * TEXT_SIZE, 0, {255,255,255,255});
         }
+
+        rl::Vector2 textSizeSize = rl::MeasureTextEx(font, "Text size", 35 * TEXT_SIZE, 0);
+        rl::DrawTextPro(font, "Text size", {GAMEW/2 - textSizeSize.x/2, GAMEH/2 + 120 - textSizeSize.y/2}, {0,0}, 0, 35 * TEXT_SIZE, 0, {255,255,255,255});
+        rl::DrawRectangle(smallTButtonRect.x, smallTButtonRect.y, smallTButtonRect.width, smallTButtonRect.height, {120, 120, 120, 255});
+        rl::DrawRectangle(bigTButtonRect.x, bigTButtonRect.y, bigTButtonRect.width, bigTButtonRect.height, {120, 120, 120, 255});
         
         rl::EndTextureMode();
 
@@ -141,11 +156,11 @@ public:
 
     void connectRender()
     {
-        rl::Vector2 connectingTextSize = rl::MeasureTextEx(font, "Connecting", 50, 0);
-        rl::DrawTextPro(font, "Connecting", {GAMEW/2 - connectingTextSize.x/2, GAMEH/2 - connectingTextSize.y/2}, {0,0}, 0, 50, 0, {255,255,255,255});
-        rl::DrawRectangle(GAMEW/2.f + connectingTextSize.x/2 + 5 + 20, GAMEH/2 + connectingTextSize.y - 37, 5, int(rl::GetTime()*1.0)%2 * 5.f, {255,255,255,255});
-        rl::DrawRectangle(GAMEW/2.f + connectingTextSize.x/2 + 5 + 10, GAMEH/2 + connectingTextSize.y - 37, 5, int((rl::GetTime()+0.33)*1.0)%2 * 5.f, {255,255,255,255});
-        rl::DrawRectangle(GAMEW/2.f + connectingTextSize.x/2 + 5, GAMEH/2 + connectingTextSize.y - 37, 5, int((rl::GetTime()+0.66)*1.0)%2 * 5.f, {255,255,255,255});
+        rl::Vector2 connectingTextSize = rl::MeasureTextEx(font, "Connecting", 50 * TEXT_SIZE, 0);
+        rl::DrawTextPro(font, "Connecting", {GAMEW/2 - connectingTextSize.x/2, GAMEH/2 - connectingTextSize.y/2}, {0,0}, 0, 50 * TEXT_SIZE, 0, {255,255,255,255});
+        rl::DrawRectangle(GAMEW/2.f + connectingTextSize.x/2 * 1.18f, GAMEH/2 + connectingTextSize.y * 0.2f, 5 * TEXT_SIZE, int(rl::GetTime()*1.0)%2 * 5.f * TEXT_SIZE, {255,255,255,255});
+        rl::DrawRectangle(GAMEW/2.f + connectingTextSize.x/2 * 1.1f, GAMEH/2 + connectingTextSize.y * 0.2f, 5 * TEXT_SIZE, int((rl::GetTime()+0.33)*1.0)%2 * 5.f * TEXT_SIZE, {255,255,255,255});
+        rl::DrawRectangle(GAMEW/2.f + connectingTextSize.x/2 * 1.f, GAMEH/2 + connectingTextSize.y * 0.2f, 5 * TEXT_SIZE, int((rl::GetTime()+0.66)*1.0)%2 * 5.f * TEXT_SIZE, {255,255,255,255});
     }
 
     void getIPInput()
@@ -206,6 +221,29 @@ public:
         if (rl::IsMouseButtonPressed(rl::MOUSE_BUTTON_LEFT) && hover)
         {
             connect = true;
+        }
+    }
+
+    void getTextSize()
+    {
+        rl::Vector2 mouse_pos = rl::GetMousePosition() * ((float)GAMEW/SCREENW);
+        if (rl::CheckCollisionPointRec(mouse_pos, smallTButtonRect))
+        {
+            if (rl::IsMouseButtonPressed(rl::MOUSE_BUTTON_LEFT))
+            {
+                TEXT_SIZE *= 0.9f;
+                if (TEXT_SIZE < 0.6f)
+                    TEXT_SIZE = 0.6f;
+            }
+        }
+        if (rl::CheckCollisionPointRec(mouse_pos, bigTButtonRect))
+        {
+            if (rl::IsMouseButtonPressed(rl::MOUSE_BUTTON_LEFT))
+            {
+                TEXT_SIZE *= 1.1f;
+                if (TEXT_SIZE > 1.4f)
+                    TEXT_SIZE = 1.4f;
+            }
         }
     }
 };

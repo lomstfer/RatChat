@@ -14,6 +14,8 @@ void setScreenVars(int width, int height);
 extern int SCREENW;
 extern int SCREENH;
 
+extern float TEXT_SIZE;
+
 #define haveMonitorWidth rl::GetMonitorWidth(rl::GetCurrentMonitor())
 #define haveMonitorHeight rl::GetMonitorHeight(rl::GetCurrentMonitor())
 

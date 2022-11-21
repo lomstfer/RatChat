@@ -86,7 +86,7 @@ struct Client
     rl::Vector2 card_dims_hand = {card_dims_x * 1.5f, card_dims_y * 1.5f};
     rl::Vector2 card_dims_hover = {card_dims_x * 1.7f, card_dims_y * 1.7f};
     rl::Vector2 card_dims_drag = {card_dims_x * 1.3f, card_dims_y * 1.3f};
-    float cards_on_hand_space = card_dims_hand.x;
+    float cards_on_hand_space = card_dims_hand.x * 0.8f;
     int cards_id_increment = 0;
     PlayingCard card_moving;
     bool moving_card = false;
@@ -163,8 +163,8 @@ struct Client
         if (rl::CheckCollisionPointRec(mouse_position, eraseHandButton))
         {
             eraseHandButtonColor = {150,150,150,255};
-            rl::Vector2 measure = rl::MeasureTextEx(font, "- erase cards on hand", 30, 0);
-            rl::DrawTextPro(font, "- erase cards on hand", {eraseHandButton.x + eraseHandButton.width + 10, eraseHandButton.y + eraseHandButton.height/2 - measure.y/2}, {0,0}, 0, 30, 0, {0,0,0,255});
+            rl::Vector2 measure = rl::MeasureTextEx(font, "- erase cards on hand", 30 * TEXT_SIZE, 0);
+            rl::DrawTextPro(font, "- erase cards on hand", {eraseHandButton.x + eraseHandButton.width + 10, eraseHandButton.y + eraseHandButton.height/2 - measure.y/2}, {0,0}, 0, 30 * TEXT_SIZE, 0, {0,0,0,255});
             if (rl::IsMouseButtonPressed(rl::MOUSE_BUTTON_LEFT))
             {
                 cards_on_hand.clear();
@@ -580,17 +580,22 @@ struct Client
             // draw players
             for (int i = 0; i < players_show.size(); i++)
             {
-                rl::Vector2 msgTextSize = rl::MeasureTextEx(font2, players_show[i].message.c_str(), 35, 0);
+                rl::Vector2 msgTextSize = rl::MeasureTextEx(font2, players_show[i].message.c_str(), 5 + 40 * TEXT_SIZE, 0);
                 if (players_show[i].id == _id)
                 {
                     rl::Vector2 pDrawPos = {_x - _camera_x, _y - _camera_y};
                     ratSheet.draw({pDrawPos.x, pDrawPos.y}, _rotation);
-                    rl::DrawTextPro(font2, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 60}, {0,0}, 0, 35, 0, {0,0,0,255});
+                    rl::DrawTextPro(font2, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 60}, {0,0}, 0, 5 + 40 * TEXT_SIZE, 0, {0,0,0,255});
                     continue;
                 }
                 rl::Vector2 pDrawPos = {players_show[i].x - _camera_x, players_show[i].y - _camera_y};
                 drawSheetFrame(TEX_RATS[players_show[i].rat_type], players_show[i].frame, ratSheet.frameWidth, ratSheet.frameHeight, pDrawPos, players_show[i].rotation, ratSheet.scale, ratSheet.origin);
-                rl::DrawTextPro(font2, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 60}, {0,0}, 0, 35, 0, {0,0,0,255});
+                rl::DrawTextPro(font2, players_show[i].message.c_str(), {pDrawPos.x - msgTextSize.x/2, pDrawPos.y - 60}, {0,0}, 0, 5 + 40 * TEXT_SIZE, 0, {0,0,0,255});
+            }
+
+            if (cards_on_hand.size() == 0)
+            {
+                cards_on_hand_space = card_dims_hand.x * 0.8f;
             }
 
             // cards on hand
@@ -611,7 +616,7 @@ struct Client
                     cards_on_hand_space *= 0.99;
                     total_width = cards_on_hand.size() * cards_on_hand_space;
                 }
-                else if (total_width < GAMEW - 200 && cards_on_hand.size() > 11)
+                else if (total_width < GAMEW - 200 && cards_on_hand_space < card_dims_hand.x * 0.8f)
                 {
                     cards_on_hand_space *= 1.01;
                     total_width = cards_on_hand.size() * cards_on_hand_space;
@@ -627,14 +632,14 @@ struct Client
 
             // coordinates
             std::string coordsText = std::to_string(ftint(_x/20)) + "; " + std::to_string(ftint(-_y/20));
-            rl::DrawTextPro(font, coordsText.c_str(), {0,0}, {0,0}, 0, 40, 0, {0,0,0,245});
+            rl::DrawTextPro(font, coordsText.c_str(), {0,0}, {0,0}, 0, 30 * TEXT_SIZE, 0, {0,0,0,245});
 
             cardsOnHandUpdate();
 
             if (isTypingMessage)
             {
-                rl::Vector2 msgTextSize = rl::MeasureTextEx(font2, typeMessage.c_str(), 100, 0);
-                rl::DrawTextPro(font2, typeMessage.c_str(), {GAMEW/2.f - msgTextSize.x/2, 50}, {0,0}, 0, 100, 0, {0,0,0,255});
+                rl::Vector2 msgTextSize = rl::MeasureTextEx(font2, typeMessage.c_str(), 100 * TEXT_SIZE, 0);
+                rl::DrawTextPro(font2, typeMessage.c_str(), {GAMEW/2.f - msgTextSize.x/2, 50}, {0,0}, 0, 100 * TEXT_SIZE, 0, {0,0,0,255});
                 rl::DrawRectangle(GAMEW/2.f + msgTextSize.x/2, 50 + msgTextSize.y - 20, 25, int(rl::GetTime()*5.0)%2 * 5.f, {0,0,0,240});
             }
         rl::EndTextureMode();
