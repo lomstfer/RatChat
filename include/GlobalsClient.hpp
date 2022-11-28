@@ -25,6 +25,8 @@ extern float TEXT_SIZE;
 extern rl::Font font;
 extern rl::Font font2;
 
+extern rl::Texture2D TEX_BUTTONC;
+
 extern rl::Texture2D TEX_DESERT;
 
 extern rl::Texture2D TEX_SS_RAT0;

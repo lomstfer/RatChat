@@ -72,6 +72,8 @@ int main()
             }
             
             client.update();
+            if (!client.isConnected)
+                break;
             if (rl::IsKeyPressed(rl::KEY_ESCAPE))
                 break;
             if (rl::WindowShouldClose())

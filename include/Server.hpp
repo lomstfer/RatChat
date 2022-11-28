@@ -20,7 +20,6 @@ struct Server
         if (host == NULL)
             Log("error: create server");
         fb_builder = flatbuffers::FlatBufferBuilder(1024);
-
 /*         for (int am = 0; am < 10; am++)
         {
             for (int i = 0; i < 13; i++)

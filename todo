@@ -1,5 +1,0 @@
-* fix dragging card while moving. card blinks in last position when put down
-* split client code up into managers
-* sounds
-* menu for client (settings: resolution, custom ip of host that overrides current etc.)
-* menu for server. so that people can download server and host themselves. Maybe settings in a txt file next to exe? clean

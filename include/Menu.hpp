@@ -26,14 +26,13 @@ public:
     int connectButtonWidth = 400;
     int connectButtonHeight = 100;
     rl::Rectangle connectButtonRect = {GAMEW/2.f - connectButtonWidth/2, GAMEH/2.f - connectButtonHeight/2, (float)connectButtonWidth, (float)connectButtonHeight};
-    rl::Color connectButtonColor = {100,150,100,255};
+    rl::Color connectButtonColor = {200,200,200,255};
 
     
-    int TButtonsWidth = 100;
+    int TButtonsWidth = 50;
     int TButtonsHeight = 50;
-    rl::Rectangle normalTButtonRect = {GAMEW/2.f - TButtonsWidth/2, GAMEH/2.f + 200 - TButtonsHeight/2, (float)TButtonsWidth, (float)TButtonsHeight};
-    rl::Rectangle smallTButtonRect = {GAMEW/2.f - 200 - TButtonsWidth/2, GAMEH/2.f + 200 - TButtonsHeight/2, (float)TButtonsWidth, (float)TButtonsHeight};
-    rl::Rectangle bigTButtonRect = {GAMEW/2.f + 200 - TButtonsWidth/2, GAMEH/2.f + 200 - TButtonsHeight/2, (float)TButtonsWidth, (float)TButtonsHeight};
+    rl::Rectangle smallTButtonRect = {GAMEW/2.f - 95 - TButtonsWidth/2, GAMEH - TButtonsHeight, (float)TButtonsWidth, (float)TButtonsHeight};
+    rl::Rectangle bigTButtonRect = {GAMEW/2.f + 125 - TButtonsWidth/2, GAMEH - TButtonsHeight, (float)TButtonsWidth, (float)TButtonsHeight};
 
     enum states {
         STATE_NONE,
@@ -99,7 +98,7 @@ public:
         rl::BeginTextureMode(rendTarg);
         rl::ClearBackground({22,22,22,255});
 
-        rl::DrawRectangle(connectButtonRect.x, connectButtonRect.y, connectButtonRect.width, connectButtonRect.height, connectButtonColor);
+        rl::DrawTexturePro(TEX_BUTTONC, {0,0,(float)TEX_BUTTONC.width,(float)TEX_BUTTONC.height}, connectButtonRect, {0,0}, 0, connectButtonColor);
         if (!connect)
         {
             rl::Vector2 connectingTextSize = rl::MeasureTextEx(font, "Connect", 50 * TEXT_SIZE, 0);
@@ -140,9 +139,9 @@ public:
         }
 
         rl::Vector2 textSizeSize = rl::MeasureTextEx(font, "Text size", 35 * TEXT_SIZE, 0);
-        rl::DrawTextPro(font, "Text size", {GAMEW/2 - textSizeSize.x/2, GAMEH/2 + 120 - textSizeSize.y/2}, {0,0}, 0, 35 * TEXT_SIZE, 0, {255,255,255,255});
-        rl::DrawRectangle(smallTButtonRect.x, smallTButtonRect.y, smallTButtonRect.width, smallTButtonRect.height, {120, 120, 120, 255});
-        rl::DrawRectangle(bigTButtonRect.x, bigTButtonRect.y, bigTButtonRect.width, bigTButtonRect.height, {120, 120, 120, 255});
+        rl::DrawTextPro(font, "Text size", {GAMEW/2 - textSizeSize.x/2, GAMEH - 25 - textSizeSize.y/2}, {0,0}, 0, 35 * TEXT_SIZE, 0, {255,255,255,255});
+        rl::DrawTextPro(font, "-", {smallTButtonRect.x, smallTButtonRect.y}, {0,0}, 0, 50, 0, {255,255,255,255});
+        rl::DrawTextPro(font, "+", {bigTButtonRect.x, bigTButtonRect.y}, {0,0}, 0, 50, 0, {255,255,255,255});
         
         rl::EndTextureMode();
 
@@ -212,11 +211,11 @@ public:
         bool hover = false;
         if (rl::CheckCollisionPointRec(mouse_pos, connectButtonRect) && !connect)
         {
-            connectButtonColor = {100,150,100,200};
+            connectButtonColor = {150,150,150,255};
             hover = true;
         }
         else
-            connectButtonColor = {100,150,100,255};
+            connectButtonColor = {200,200,200,255};
 
         if (rl::IsMouseButtonPressed(rl::MOUSE_BUTTON_LEFT) && hover)
         {
@@ -231,7 +230,7 @@ public:
         {
             if (rl::IsMouseButtonPressed(rl::MOUSE_BUTTON_LEFT))
             {
-                TEXT_SIZE *= 0.9f;
+                TEXT_SIZE -= 0.1f;
                 if (TEXT_SIZE < 0.6f)
                     TEXT_SIZE = 0.6f;
             }
@@ -240,7 +239,7 @@ public:
         {
             if (rl::IsMouseButtonPressed(rl::MOUSE_BUTTON_LEFT))
             {
-                TEXT_SIZE *= 1.1f;
+                TEXT_SIZE += 0.1f;
                 if (TEXT_SIZE > 1.4f)
                     TEXT_SIZE = 1.4f;
             }

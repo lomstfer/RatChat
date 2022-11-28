@@ -133,14 +133,13 @@ struct Client
         {
             switch (event.type)
             {
-                /* case ENET_EVENT_TYPE_CONNECT:
-                    isConnected = true;
-                    _id = event.peer->outgoingPeerID;
-                    send_now = true;
-                    break; */
                 case ENET_EVENT_TYPE_RECEIVE:
                     getGameStateInfo(event.packet->data);
                     enet_packet_destroy(event.packet);
+                    break;
+                // when server shut down => go back to menu
+                case ENET_EVENT_TYPE_DISCONNECT:
+                    isConnected = false;
                     break;
             }
         }
@@ -187,6 +186,11 @@ struct Client
                     isConnected = true;
                     _id = event.peer->outgoingPeerID;
                     send_now = true;
+                    break;
+                
+                case ENET_EVENT_TYPE_DISCONNECT:
+                    enet_peer_reset(host);
+                    host = enet_host_connect(client, &address, 1, 0);
                     break;
             }
         }

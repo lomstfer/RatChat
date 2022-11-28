@@ -36,6 +36,8 @@ void setScreenVars(int width, int height)
 rl::Font font;
 rl::Font font2;
 
+rl::Texture2D TEX_BUTTONC;
+
 rl::Texture2D TEX_DESERT;
 
 rl::Texture2D TEX_SS_RAT;
@@ -55,6 +57,7 @@ void loadTextures() {
     font = rl::LoadFontEx("assets/Roboto-Regular.ttf", 128, 0, 250);
     font2 = rl::LoadFontEx("assets/NanumPenScript-Regular.ttf", 128, 0, 250);
 
+    TEX_BUTTONC = rl::LoadTexture("assets/buttonc.png");
     TEX_DESERT = rl::LoadTexture("assets/desert.png");
     TEX_SS_RAT0 = rl::LoadTexture("assets/Rats/Dream Rat 0.png");
     TEX_SS_RAT1 = rl::LoadTexture("assets/Rats/Dream Rat 1.png");
