@@ -58,7 +58,7 @@ int main()
                 goto EXIT;
         }
         
-        // in the game
+        // in the world
         while (true)
         {
             if (rl::IsKeyPressed(rl::KEY_F11))

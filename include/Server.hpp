@@ -20,17 +20,6 @@ struct Server
         if (host == NULL)
             Log("error: create server");
         fb_builder = flatbuffers::FlatBufferBuilder(1024);
-/*         for (int am = 0; am < 10; am++)
-        {
-            for (int i = 0; i < 13; i++)
-            {
-                for (int j = 0; j < 4; j++)
-                {
-                    cards_on_ground.emplace_back(rand()%999999, i+1, j, i*(card_dims_x+SPRITE_SCALE), j*(card_dims_y+SPRITE_SCALE), false);
-                }
-            }
-        }
- */        
     }
 
     ENetHost* host;
@@ -69,7 +58,6 @@ struct Server
                 break;
 
             case ENET_EVENT_TYPE_RECEIVE:
-                // to do: multiple different packets - for optimization and usability
                 getClientInfo(event.packet->data);
                 broadcastState();
                 enet_packet_destroy(event.packet);
@@ -124,7 +112,6 @@ struct Server
                     {
                         players_server[i].message = flatbuffers::GetString(pData->message());
                     }
-                        
                 }
             }
         }
