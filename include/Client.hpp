@@ -505,30 +505,60 @@ struct Client
         {
             if (players_show[i].id == players_server[i].id)
             {
-                if (players_show[i].x < players_server[i].x)
+                float dX = sqrt(pow(players_server[i].x - players_show[i].x, 2));
+                float dY = sqrt(pow(players_server[i].y - players_show[i].y, 2));
+                if (dX < 1)
+                    players_show[i].x = players_server[i].x;
+                if (dY < 1)
+                    players_show[i].y = players_server[i].y;
+
+                bool up = players_show[i].y > players_server[i].y;
+                bool down = players_show[i].y < players_server[i].y;
+                bool left = players_show[i].x > players_server[i].x;
+                bool right = players_show[i].x < players_server[i].x;
+
+                float sX = 0;
+                float sY = 0;
+
+                if (left)
                 {
-                    players_show[i].x += _speed * dt;
-                    if (players_show[i].x > players_server[i].x)
-                        players_show[i].x = players_server[i].x;
+                    sX = -_speed;
                 }
-                if (players_show[i].x > players_server[i].x)
+                if (right)
                 {
-                    players_show[i].x -= _speed * dt;
-                    if (players_show[i].x < players_server[i].x)
-                        players_show[i].x = players_server[i].x;
+                    sX = _speed;
                 }
-                if (players_show[i].y < players_server[i].y)
+                if (up)
                 {
-                    players_show[i].y += _speed * dt;
-                    if (players_show[i].y > players_server[i].y)
-                        players_show[i].y = players_server[i].y;
+                    sY = -_speed;
+                    if (left)
+                    {
+                        sX = -_speed * sqrt(0.5f);
+                        sY = -_speed * sqrt(0.5f);
+                    }
+                    if (right)
+                    {
+                        sX = _speed * sqrt(0.5f);
+                        sY = -_speed * sqrt(0.5f);
+                    }
                 }
-                if (players_show[i].y > players_server[i].y)
+                if (down)
                 {
-                    players_show[i].y -= _speed * dt;
-                    if (players_show[i].y < players_server[i].y)
-                        players_show[i].y = players_server[i].y;
+                    sY = _speed;
+                    if (left)
+                    {
+                        sX = -_speed * sqrt(0.5f);
+                        sY = _speed * sqrt(0.5f);
+                    }
+                    if (right)
+                    {
+                        sX = _speed * sqrt(0.5f);
+                        sY = _speed * sqrt(0.5f);
+                    }
                 }
+
+                players_show[i].x += sX * dt;
+                players_show[i].y += sY * dt;
             }
         }
     }

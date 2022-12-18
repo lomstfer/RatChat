@@ -7,16 +7,15 @@
 
 struct Server
 {
-    Server(int port)
+    Server(int port, int max_clients)
     {
-        port = port == -1 ? 25565 : port;
         Log("server");
         if (enet_initialize() != 0)
             Log("error: init enet");
         atexit(enet_deinitialize);
         address.host = ENET_HOST_ANY;
         address.port = port;
-        host = enet_host_create(&address, 32, 1, 0, 0);
+        host = enet_host_create(&address, max_clients, 1, 0, 0);
         if (host == NULL)
             Log("error: create server");
         fb_builder = flatbuffers::FlatBufferBuilder(1024);
