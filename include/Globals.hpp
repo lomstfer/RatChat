@@ -8,7 +8,7 @@
 #define Log(x) std::cout << x << std::endl
 #define Lognl(x) std::cout << std::endl << x << std::endl
 
-#define DEFAULT_IP "127.0.0.1"
+#define DEFAULT_IP "192.168.194.73"
 #define DEFAULT_PORT 25565
 #define DEFAULT_MAXCLIENTS 32
 
