@@ -4,7 +4,8 @@
 int main()
 {
     rl::SetConfigFlags(rl::FLAG_VSYNC_HINT);
-    rl::InitWindow(SCREENW, SCREENH, "");
+    rl::InitWindow(SCREENW, SCREENH, "Ratchat");
+    rl::SetWindowIcon(rl::LoadImageFromTexture(rl::LoadTexture("assets/drat_0.png")));
     rl::SetExitKey(rl::KEY_NULL);
     changeWindowSize(haveMonitorWidth*0.8f, haveMonitorHeight*0.8f);
 
